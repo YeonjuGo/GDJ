@@ -28,7 +28,7 @@ MKDIR_OBJ=mkdir -p $(GDJDIR)/obj
 MKDIR_OUTPUT=mkdir -p $(GDJDIR)/output
 MKDIR_PDF=mkdir -p $(GDJDIR)/pdfDir
 
-all: mkdirBin mkdirLib mkdirObj mkdirOutput mkdirPdf obj/centralityFromInput.o obj/checkMakeDir.o obj/configParser.o obj/globalDebugHandler.o obj/keyHandler.o obj/sampleHandler.o lib/libATLASGDJ.so bin/gdjNtuplePreProc.exe bin/gdjNTupleToHist.exe bin/gdjNTupleToMBHist.exe bin/gdjHistDumper.exe bin/gdjGammaJetResponsePlot.exe bin/gdjMixedEventPlotter.exe bin/gdjResponsePlotter.exe bin/gdjDataMCRawPlotter.exe bin/grlToTex.exe bin/testKeyHandler.exe bin/testSampleHandler.exe bin/gdjPlotMBHist.exe  bin/gdjNTupleToSignalHist.exe bin/gdjPlotSignalHist.exe bin/gdjToyMultiMix.exe bin/gdjPlotToy.exe
+all: mkdirBin mkdirLib mkdirObj mkdirOutput mkdirPdf obj/centralityFromInput.o obj/checkMakeDir.o obj/configParser.o obj/globalDebugHandler.o obj/keyHandler.o obj/sampleHandler.o lib/libATLASGDJ.so bin/gdjNtuplePreProc.exe bin/gdjNTupleToHist.exe bin/gdjNTupleToHist_dijet.exe bin/gdjHistDumper.exe bin/gdjGammaJetResponsePlot.exe bin/gdjMixedEventPlotter.exe bin/gdjQuarkGluonJetsPlotter.exe bin/gdjResponsePlotter.exe bin/gdjDataMCPlotter_dijet.exe bin/gdjSignalBackgroundPhotonPlotter_dijet.exe bin/gdjDataPbPbPPPlotter.exe bin/gdjDataMCRawPlotter.exe bin/grlToTex.exe bin/testKeyHandler.exe bin/testSampleHandler.exe bin/phoTaggedJetRaa_photonEff.exe bin/phoTaggedJetRaa.exe
 
 mkdirBin:
 	$(MKDIR_BIN)
@@ -72,17 +72,8 @@ bin/gdjNtuplePreProc.exe: src/gdjNtuplePreProc.C
 bin/gdjNTupleToHist.exe: src/gdjNTupleToHist.C
 	$(CXX) $(CXXFLAGS) src/gdjNTupleToHist.C -o bin/gdjNTupleToHist.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
 
-bin/gdjNTupleToSignalHist.exe: src/gdjNTupleToSignalHist.C
-	$(CXX) $(CXXFLAGS) src/gdjNTupleToSignalHist.C -o bin/gdjNTupleToSignalHist.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
-
-bin/gdjNTupleToMBHist.exe: src/gdjNTupleToMBHist.C
-	$(CXX) $(CXXFLAGS) src/gdjNTupleToMBHist.C -o bin/gdjNTupleToMBHist.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
-
-bin/gdjPlotMBHist.exe: src/gdjPlotMBHist.C
-	$(CXX) $(CXXFLAGS) src/gdjPlotMBHist.C -o bin/gdjPlotMBHist.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
-
-bin/gdjPlotSignalHist.exe: src/gdjPlotSignalHist.C
-	$(CXX) $(CXXFLAGS) src/gdjPlotSignalHist.C -o bin/gdjPlotSignalHist.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+bin/gdjNTupleToHist_dijet.exe: src/gdjNTupleToHist_dijet.C
+	$(CXX) $(CXXFLAGS) src/gdjNTupleToHist_dijet.C -o bin/gdjNTupleToHist_dijet.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
 
 bin/gdjHistDumper.exe: src/gdjHistDumper.C
 	$(CXX) $(CXXFLAGS) src/gdjHistDumper.C -o bin/gdjHistDumper.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
@@ -96,6 +87,18 @@ bin/gdjMixedEventPlotter.exe: src/gdjMixedEventPlotter.C
 bin/gdjResponsePlotter.exe: src/gdjResponsePlotter.C
 	$(CXX) $(CXXFLAGS) src/gdjResponsePlotter.C -o bin/gdjResponsePlotter.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
 
+bin/gdjSignalBackgroundPhotonPlotter_dijet.exe: src/gdjSignalBackgroundPhotonPlotter_dijet.C
+	$(CXX) $(CXXFLAGS) src/gdjSignalBackgroundPhotonPlotter_dijet.C -o bin/gdjSignalBackgroundPhotonPlotter_dijet.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
+bin/gdjQuarkGluonJetsPlotter.exe: src/gdjQuarkGluonJetsPlotter.C
+	$(CXX) $(CXXFLAGS) src/gdjQuarkGluonJetsPlotter.C -o bin/gdjQuarkGluonJetsPlotter.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
+bin/gdjDataMCPlotter_dijet.exe: src/gdjDataMCPlotter_dijet.C
+	$(CXX) $(CXXFLAGS) src/gdjDataMCPlotter_dijet.C -o bin/gdjDataMCPlotter_dijet.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
+bin/gdjDataPbPbPPPlotter.exe: src/gdjDataPbPbPPPlotter.C
+	$(CXX) $(CXXFLAGS) src/gdjDataPbPbPPPlotter.C -o bin/gdjDataPbPbPPPlotter.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
 bin/gdjDataMCRawPlotter.exe: src/gdjDataMCRawPlotter.C
 	$(CXX) $(CXXFLAGS) src/gdjDataMCRawPlotter.C -o bin/gdjDataMCRawPlotter.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
 
@@ -108,11 +111,12 @@ bin/testKeyHandler.exe: src/testKeyHandler.C
 bin/testSampleHandler.exe: src/testSampleHandler.C
 	$(CXX) $(CXXFLAGS) src/testSampleHandler.C -o bin/testSampleHandler.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
 
-bin/gdjToyMultiMix.exe: src/gdjToyMultiMix.C
-	$(CXX) $(CXXFLAGS) src/gdjToyMultiMix.C -o bin/gdjToyMultiMix.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+bin/phoTaggedJetRaa.exe: src/phoTaggedJetRaa.C
+	$(CXX) $(CXXFLAGS) src/phoTaggedJetRaa.C -o bin/phoTaggedJetRaa.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
 
-bin/gdjPlotToy.exe: src/gdjPlotToy.C
-	$(CXX) $(CXXFLAGS) src/gdjPlotToy.C -o bin/gdjPlotToy.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+bin/phoTaggedJetRaa_photonEff.exe: src/phoTaggedJetRaa_photonEff.C
+	$(CXX) $(CXXFLAGS) src/phoTaggedJetRaa_photonEff.C -o bin/phoTaggedJetRaa_photonEff.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
 
 clean:
 	rm -f ./*~
@@ -125,8 +129,6 @@ clean:
 	rm -f include/#*#
 	rm -f input/*~
 	rm -f input/#*#
-	rm -f input/ntupleToHist/*~
-	rm -f input/plotRes/*~
 	rm -f lib/*.so
 	rm -rf lib
 	rm -f obj/*.o
