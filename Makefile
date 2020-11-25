@@ -28,7 +28,7 @@ MKDIR_OBJ=mkdir -p $(GDJDIR)/obj
 MKDIR_OUTPUT=mkdir -p $(GDJDIR)/output
 MKDIR_PDF=mkdir -p $(GDJDIR)/pdfDir
 
-all: mkdirBin mkdirLib mkdirObj mkdirOutput mkdirPdf obj/centralityFromInput.o obj/checkMakeDir.o obj/configParser.o obj/globalDebugHandler.o obj/keyHandler.o obj/sampleHandler.o lib/libATLASGDJ.so bin/gdjNtuplePreProc.exe bin/gdjNTupleToHist.exe bin/gdjNTupleToHist_dijet.exe bin/gdjHistDumper.exe bin/gdjGammaJetResponsePlot.exe bin/gdjMixedEventPlotter.exe bin/gdjQuarkGluonJetsPlotter.exe bin/gdjResponsePlotter.exe bin/gdjDataMCPlotter_dijet.exe bin/gdjSignalBackgroundPhotonPlotter_dijet.exe bin/gdjDataPbPbPPPlotter.exe bin/gdjDataMCRawPlotter.exe bin/grlToTex.exe bin/testKeyHandler.exe bin/testSampleHandler.exe bin/phoTaggedJetRaa_photonEff.exe bin/phoTaggedJetRaa.exe
+all: mkdirBin mkdirLib mkdirObj mkdirOutput mkdirPdf obj/centralityFromInput.o obj/checkMakeDir.o obj/configParser.o obj/globalDebugHandler.o obj/keyHandler.o obj/sampleHandler.o lib/libATLASGDJ.so bin/gdjNtuplePreProc.exe bin/gdjNTupleToHist.exe bin/gdjNTupleToHist_dijet.exe bin/gdjHistDumper.exe bin/gdjGammaJetResponsePlot.exe bin/gdjMixedEventPlotter.exe bin/gdjQuarkGluonJetsPlotter.exe bin/gdjResponsePlotter.exe bin/gdjDataMCPlotter_dijet.exe bin/gdjSignalBackgroundPhotonPlotter_dijet.exe bin/gdjDataPbPbPPPlotter.exe bin/gdjDataMCRawPlotter.exe bin/grlToTex.exe bin/testKeyHandler.exe bin/testSampleHandler.exe bin/phoTaggedJetRaa_photonEff.exe bin/phoTaggedJetRaa_photonEnergy.exe bin/phoTaggedJetRaa_photonPurity.exe bin/phoTaggedJetRaa.exe bin/phoTaggedJetRaa_jetPt_photonEffPurCorrected.exe bin/phoTaggedJetRaa_jetPt.exe bin/phoTaggedJetRaa_jetEnergy.exe bin/gdjNtuplePreProc_onlyPhoton.exe
 
 mkdirBin:
 	$(MKDIR_BIN)
@@ -68,6 +68,9 @@ lib/libATLASGDJ.so:
 
 bin/gdjNtuplePreProc.exe: src/gdjNtuplePreProc.C
 	$(CXX) $(CXXFLAGS) src/gdjNtuplePreProc.C -o bin/gdjNtuplePreProc.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
+bin/gdjNtuplePreProc_onlyPhoton.exe: src/gdjNtuplePreProc_onlyPhoton.C
+	$(CXX) $(CXXFLAGS) src/gdjNtuplePreProc_onlyPhoton.C -o bin/gdjNtuplePreProc_onlyPhoton.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
 
 bin/gdjNTupleToHist.exe: src/gdjNTupleToHist.C
 	$(CXX) $(CXXFLAGS) src/gdjNTupleToHist.C -o bin/gdjNTupleToHist.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
@@ -116,6 +119,21 @@ bin/phoTaggedJetRaa.exe: src/phoTaggedJetRaa.C
 
 bin/phoTaggedJetRaa_photonEff.exe: src/phoTaggedJetRaa_photonEff.C
 	$(CXX) $(CXXFLAGS) src/phoTaggedJetRaa_photonEff.C -o bin/phoTaggedJetRaa_photonEff.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
+bin/phoTaggedJetRaa_photonPurity.exe: src/phoTaggedJetRaa_photonPurity.C
+	$(CXX) $(CXXFLAGS) src/phoTaggedJetRaa_photonPurity.C -o bin/phoTaggedJetRaa_photonPurity.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
+bin/phoTaggedJetRaa_photonEnergy.exe: src/phoTaggedJetRaa_photonEnergy.C
+	$(CXX) $(CXXFLAGS) src/phoTaggedJetRaa_photonEnergy.C -o bin/phoTaggedJetRaa_photonEnergy.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
+bin/phoTaggedJetRaa_jetEnergy.exe: src/phoTaggedJetRaa_jetEnergy.C
+	$(CXX) $(CXXFLAGS) src/phoTaggedJetRaa_jetEnergy.C -o bin/phoTaggedJetRaa_jetEnergy.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
+bin/phoTaggedJetRaa_jetPt.exe: src/phoTaggedJetRaa_jetPt.C
+	$(CXX) $(CXXFLAGS) src/phoTaggedJetRaa_jetPt.C -o bin/phoTaggedJetRaa_jetPt.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
+bin/phoTaggedJetRaa_jetPt_photonEffPurCorrected.exe: src/phoTaggedJetRaa_jetPt_photonEffPurCorrected.C
+	$(CXX) $(CXXFLAGS) src/phoTaggedJetRaa_jetPt_photonEffPurCorrected.C -o bin/phoTaggedJetRaa_jetPt_photonEffPurCorrected.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
 
 
 clean:

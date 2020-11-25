@@ -1,4 +1,5 @@
 //Author: Chris McGinn (2020.02.19)
+//Modified by: Yeonju Go (2020.09.18)
 //Contact at chmc7718@colorado.edu or cffionn on skype for bugs
 
 //c+cpp
