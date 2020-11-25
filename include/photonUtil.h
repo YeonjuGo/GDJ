@@ -19,4 +19,48 @@ inline bool isGoodPhoton(bool isPP, bool phoTight, float phoIso, float phoEta)
   return true;
 }
 
+double getCorrectedPhotonIsolation(bool isPP, float phoIso, float phoPt, float phoEta, float cent)
+{
+  phoEta = TMath::Abs(phoEta);
+
+  ////////// These correction is optimized for the correctedIso < 3 GeV cut for both pp and PbPb /////////
+  double correctedIso = phoIso;
+  if(phoEta < 1.37) correctedIso = correctedIso - 0.021049*phoPt - 2.855968 + 3.0;
+  else if(phoEta >= 1.52 && phoEta < 2.37) correctedIso = correctedIso - 0.038043*phoPt - 2.860857 + 3.0;
+  else return 999; 
+
+  if(!isPP){
+      if(phoEta < 1.37) correctedIso = correctedIso + 0.163862*cent - 0.000797*cent*cent - 10.268763 + 3.0;
+      else correctedIso = correctedIso + 0.155623*cent - 0.000789*cent*cent - 9.301528 + 3.0;
+  }
+
+  return correctedIso;
+}
+
+double getPtCorrectedPhotonIsolation(float phoIso, float phoPt, float phoEta)
+{
+  phoEta = TMath::Abs(phoEta);
+
+  ////////// These correction is optimized for the correctedIso < 3 GeV cut for both pp and PbPb /////////
+  double correctedIso = phoIso;
+  if(phoEta < 1.37) correctedIso = correctedIso - 0.021049*phoPt - 2.855968 + 3.0;
+  else if(phoEta >= 1.52 && phoEta < 2.37) correctedIso = correctedIso - 0.038043*phoPt - 2.860857 + 3.0;
+  else return 999; 
+
+  return correctedIso;
+}
+
+double getCentCorrectedPhotonIsolation(float phoIso, float phoEta, float cent)
+{
+  phoEta = TMath::Abs(phoEta);
+
+  ////////// These correction is optimized for the correctedIso < 3 GeV cut for both pp and PbPb /////////
+  double correctedIso = phoIso;
+  if(phoEta < 1.37) correctedIso = correctedIso + 0.163862*cent - 0.000797*cent*cent - 10.268763 + 3.0;
+  else if(phoEta >= 1.52 && phoEta < 2.37) correctedIso = correctedIso + 0.155623*cent - 0.000789*cent*cent - 9.301528 + 3.0;
+  else return 999; 
+
+  return correctedIso;
+}
+
 #endif
