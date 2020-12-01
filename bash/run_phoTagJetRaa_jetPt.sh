@@ -9,7 +9,7 @@ fi
 echo $VAR
 
 ##### jet pT for signal photon
-time ./bin/phoTaggedJetRaa_jetPt.exe input/phoTagJetRaa/phoTagJetRaa_PbPbData_$VAR.config 0 >& ./log/$VER/phoTagJetRaa_jetPt_PbPbData_${VER}_${DATE}_signal.log &
+time ./bin/phoTaggedJetRaa_jetPt.exe input/phoTagJetRaa/phoTagJetRaa_PbPbData_$VAR.config 0 >& ./log/$VER/phoTagJetRaa_jetPt_PbPbData_${VAR}_${DATE}_signal.log &
 ./bin/phoTaggedJetRaa_jetPt.exe input/phoTagJetRaa/phoTagJetRaa_PbPbMC_$VAR.config 0 >& ./log/$VER/phoTagJetRaa_jetPt_PbPbMC_${VAR}_${DATE}_signal.log &
 ./bin/phoTaggedJetRaa_jetPt.exe input/phoTagJetRaa/phoTagJetRaa_PPData_$VAR.config 0 >& ./log/$VER/phoTagJetRaa_jetPt_PPData_${VAR}_${DATE}_signal.log &
 ./bin/phoTaggedJetRaa_jetPt.exe input/phoTagJetRaa/phoTagJetRaa_PPMC_$VAR.config 0 >& ./log/$VER/phoTagJetRaa_jetPt_PPMC_${VAR}_${DATE}_signal.log &

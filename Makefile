@@ -28,7 +28,7 @@ MKDIR_OBJ=mkdir -p $(GDJDIR)/obj
 MKDIR_OUTPUT=mkdir -p $(GDJDIR)/output
 MKDIR_PDF=mkdir -p $(GDJDIR)/pdfDir
 
-all: mkdirBin mkdirLib mkdirObj mkdirOutput mkdirPdf obj/centralityFromInput.o obj/checkMakeDir.o obj/configParser.o obj/globalDebugHandler.o obj/keyHandler.o obj/sampleHandler.o lib/libATLASGDJ.so bin/gdjNtuplePreProc.exe bin/gdjNTupleToHist.exe bin/gdjNTupleToHist_dijet.exe bin/gdjHistDumper.exe bin/gdjGammaJetResponsePlot.exe bin/gdjMixedEventPlotter.exe bin/gdjQuarkGluonJetsPlotter.exe bin/gdjResponsePlotter.exe bin/gdjDataMCPlotter_dijet.exe bin/gdjSignalBackgroundPhotonPlotter_dijet.exe bin/gdjDataPbPbPPPlotter.exe bin/gdjDataMCRawPlotter.exe bin/grlToTex.exe bin/testKeyHandler.exe bin/testSampleHandler.exe bin/phoTaggedJetRaa_photonEff.exe bin/phoTaggedJetRaa_photonEnergy.exe bin/phoTaggedJetRaa_photonPurity.exe bin/phoTaggedJetRaa.exe bin/phoTaggedJetRaa_jetPt_photonEffPurCorrected.exe bin/phoTaggedJetRaa_jetPt.exe bin/phoTaggedJetRaa_jetEnergy.exe bin/gdjNtuplePreProc_onlyPhoton.exe
+all: mkdirBin mkdirLib mkdirObj mkdirOutput mkdirPdf obj/centralityFromInput.o obj/checkMakeDir.o obj/configParser.o obj/globalDebugHandler.o obj/keyHandler.o obj/sampleHandler.o lib/libATLASGDJ.so bin/gdjNtuplePreProc.exe bin/gdjNTupleToHist.exe bin/gdjNTupleToHist_dijet.exe bin/gdjHistDumper.exe bin/gdjGammaJetResponsePlot.exe bin/gdjMixedEventPlotter.exe bin/gdjQuarkGluonJetsPlotter.exe bin/gdjResponsePlotter.exe bin/gdjDataMCPlotter_dijet.exe bin/gdjSignalBackgroundPhotonPlotter_dijet.exe bin/gdjDataPbPbPPPlotter.exe bin/gdjDataMCRawPlotter.exe bin/grlToTex.exe bin/testKeyHandler.exe bin/testSampleHandler.exe bin/phoTaggedJetRaa_photonEff.exe bin/phoTaggedJetRaa_photonEnergy.exe bin/phoTaggedJetRaa_photonPurity.exe bin/phoTaggedJetRaa.exe bin/phoTaggedJetRaa_jetPt_photonEffPurCorrected.exe bin/phoTaggedJetRaa_jetPt.exe bin/phoTaggedJetRaa_jetEnergy.exe bin/gdjNtuplePreProc_onlyPhoton.exe bin/gdjNtuplePreProc_phoTaggedJetRaa.exe
 
 mkdirBin:
 	$(MKDIR_BIN)
@@ -71,6 +71,9 @@ bin/gdjNtuplePreProc.exe: src/gdjNtuplePreProc.C
 
 bin/gdjNtuplePreProc_onlyPhoton.exe: src/gdjNtuplePreProc_onlyPhoton.C
 	$(CXX) $(CXXFLAGS) src/gdjNtuplePreProc_onlyPhoton.C -o bin/gdjNtuplePreProc_onlyPhoton.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
+bin/gdjNtuplePreProc_phoTaggedJetRaa.exe: src/gdjNtuplePreProc_phoTaggedJetRaa.C
+	$(CXX) $(CXXFLAGS) src/gdjNtuplePreProc_phoTaggedJetRaa.C -o bin/gdjNtuplePreProc_phoTaggedJetRaa.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
 
 bin/gdjNTupleToHist.exe: src/gdjNTupleToHist.C
 	$(CXX) $(CXXFLAGS) src/gdjNTupleToHist.C -o bin/gdjNTupleToHist.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ

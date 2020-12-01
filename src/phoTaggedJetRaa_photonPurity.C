@@ -219,7 +219,7 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
     if(gammaPtBinsSubDoLog) getLogBins(gammaPtBinsSubLow, gammaPtBinsSubHigh, nGammaPtBinsSub, gammaPtBinsSub);
     else getLinBins(gammaPtBinsSubLow, gammaPtBinsSubHigh, nGammaPtBinsSub, gammaPtBinsSub);
     } else{
-        std::vector<int> ptBins_vec = strToVectI(config_p->GetValue("PTBINSSUB", "50,55,60,70,90,130,1000" ));
+        std::vector<int> ptBins_vec = strToVectI(config_p->GetValue("GAMMAPTBINSSUB", "50,55,60,70,90,130,1000" ));
         Int_t tempPtbinSize =  ptBins_vec.size();
         for(Int_t ipt=0;ipt<tempPtbinSize;++ipt){
             gammaPtBinsSub[ipt] = ptBins_vec.at(ipt);
