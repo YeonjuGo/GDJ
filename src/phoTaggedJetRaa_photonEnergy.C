@@ -77,6 +77,7 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
 
     std::vector<std::string> necessaryParams = {"INDIRNAME",
                                                 "VERSION",
+                                                "SYSTEMATIC",
                                                 "CENTFILENAME",
                                                 "ISPP",
                                                 "ISMC",
@@ -98,6 +99,7 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
         "GAMMAPTBINSHIGH",
         "GAMMAPTBINSDOLOG",
         "DOPTBINSSUBINCONFIG",
+        "GAMMAPTBINSSUB",
         "NGAMMAPTBINSSUB",
         "GAMMAPTBINSSUBLOW",
         "GAMMAPTBINSSUBHIGH",
@@ -108,11 +110,12 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
 
     std::string inCentFileName = config_p->GetValue("CENTFILENAME","");
     std::string version = config_p->GetValue("VERSION","temp");
+    std::string systematic = config_p->GetValue("SYSTEMATIC","nominal");
     const bool doTightID= config_p->GetValue("DOTIGHTID_PHOTONENERGY", 1);
     const bool doIso = config_p->GetValue("DOISO_PHOTONENERGY", 1);
     const bool doPtCorrectedIso = config_p->GetValue("DOPTCORRECTEDISO", 1);
     const bool doCentCorrectedIso = config_p->GetValue("DOCENTCORRECTEDISO", 1);
-    const bool doPtBinInConfig = config_p->GetValue("DOPTBINSINCONFIG", 1);
+    const bool doPtBinInConfig = config_p->GetValue("DOPTBINSINCONFIG", 0);
     const bool doPtBinSubInConfig = config_p->GetValue("DOPTBINSSUBINCONFIG", 1);
     const Float_t isoCut = config_p->GetValue("ISOCUT", 3);
     const Float_t genIsoCut = config_p->GetValue("GENISOCUT", 5);
@@ -134,7 +137,8 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
 
     std::string systStr = "PP";
     if(!isPP) systStr = "PbPb";
-    std::string outFileName = "output/" + version + "/phoTagJetRaa_photonEnergy_" + systStr + "MC_" + version + ".root ";
+    std::string capStr = version + "_" + systematic;
+    std::string outFileName = "output/" + version + "/phoTagJetRaa_photonEnergy_" + systStr + "MC_" + capStr + ".root ";
 
     centralityFromInput centTable(inCentFileName);
     if(doGlobalDebug) centTable.PrintTableTex();
@@ -173,12 +177,17 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
     ///////////////////////////////////////////////////////////////
     // photon pT main binning 
     const Int_t nMaxPtBins = 300;
-    const Int_t nGammaPtBins = config_p->GetValue("NGAMMAPTBINS",10);
-    if(!goodBinning(inConfigFileName, nMaxPtBins, nGammaPtBins, "NGAMMAPTBINS")) return 1;
+    Int_t nGammaPtBins_temp = config_p->GetValue("NGAMMAPTBINS",10);
+    if(!goodBinning(inConfigFileName, nMaxPtBins, nGammaPtBins_temp, "NGAMMAPTBINS")) return 1;
     const Float_t gammaPtBinsLow = config_p->GetValue("GAMMAPTBINSLOW",50.0);
     const Float_t gammaPtBinsHigh = config_p->GetValue("GAMMAPTBINSHIGH",1000.0);
     const Bool_t gammaPtBinsDoLog = config_p->GetValue("GAMMAPTBINSDOLOG",1);
-    Double_t gammaPtBins[nMaxPtBins+1];
+    if(doPtBinInConfig){
+        std::vector<int> ptBins_vec = strToVectI(config_p->GetValue("PTBINS", "50,55,60,70,90,130,1000"));
+        nGammaPtBins_temp = ptBins_vec.size() - 1;
+    }
+    const Int_t nGammaPtBins = nGammaPtBins_temp; 
+    Double_t gammaPtBins[nGammaPtBins+1];
     if(!doPtBinInConfig){
         if(gammaPtBinsDoLog) getLogBins(gammaPtBinsLow, gammaPtBinsHigh, nGammaPtBins, gammaPtBins);
         else getLinBins(gammaPtBinsLow, gammaPtBinsHigh, nGammaPtBins, gammaPtBins);
@@ -187,25 +196,27 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
         Int_t tempPtbinSize =  ptBins_vec.size();
         for(Int_t ipt=0;ipt<tempPtbinSize;++ipt){
             gammaPtBins[ipt] = ptBins_vec.at(ipt);
+            //cout << "gammaPtBins  = " << gammaPtBins[ipt] << endl;
         }
     }
-    std::vector<std::string> genGammaPtBinsStr, recoGammaPtBinsStr;
-    for(Int_t pI = 0; pI < nGammaPtBins; ++pI){
-        genGammaPtBinsStr.push_back("GenGammaPt" + std::to_string(pI));
-        recoGammaPtBinsStr.push_back("RecoGammaPt" + std::to_string(pI));
 
-        binsToLabelStr[genGammaPtBinsStr[pI]] = prettyString(gammaPtBins[pI], 1, false) + " < Gen. p_{T,#gamma} < " + prettyString(gammaPtBins[pI+1], 1, false);
-        binsToLabelStr[recoGammaPtBinsStr[pI]] = prettyString(gammaPtBins[pI], 1, false) + " < Reco. p_{T,#gamma} < " + prettyString(gammaPtBins[pI+1], 1, false);
-    }
-    genGammaPtBinsStr.push_back("GenGammaPt" + std::to_string(nGammaPtBins));
-    recoGammaPtBinsStr.push_back("RecoGammaPt" + std::to_string(nGammaPtBins));
-
-    binsToLabelStr[genGammaPtBinsStr[genGammaPtBinsStr.size()-1]] = prettyString(gammaPtBins[0], 1, false) + " < Gen. p_{T,#gamma} < " + prettyString(gammaPtBins[nGammaPtBins], 1, false);
-    binsToLabelStr[recoGammaPtBinsStr[recoGammaPtBinsStr.size()-1]] = prettyString(gammaPtBins[0], 1, false) + " < Reco. p_{T,#gamma} < " + prettyString(gammaPtBins[nGammaPtBins], 1, false);
-
+//    std::vector<std::string> genGammaPtBinsStr, recoGammaPtBinsStr;
+//    for(Int_t pI = 0; pI < nGammaPtBins; ++pI){
+//        genGammaPtBinsStr.push_back("GenGammaPt" + std::to_string(pI));
+//        recoGammaPtBinsStr.push_back("RecoGammaPt" + std::to_string(pI));
+//
+//        binsToLabelStr[genGammaPtBinsStr[pI]] = prettyString(gammaPtBins[pI], 1, false) + " < Gen. p_{T,#gamma} < " + prettyString(gammaPtBins[pI+1], 1, false);
+//        binsToLabelStr[recoGammaPtBinsStr[pI]] = prettyString(gammaPtBins[pI], 1, false) + " < Reco. p_{T,#gamma} < " + prettyString(gammaPtBins[pI+1], 1, false);
+//    }
+//    genGammaPtBinsStr.push_back("GenGammaPt" + std::to_string(nGammaPtBins));
+//    recoGammaPtBinsStr.push_back("RecoGammaPt" + std::to_string(nGammaPtBins));
+//
+//    binsToLabelStr[genGammaPtBinsStr[genGammaPtBinsStr.size()-1]] = prettyString(gammaPtBins[0], 1, false) + " < Gen. p_{T,#gamma} < " + prettyString(gammaPtBins[nGammaPtBins], 1, false);
+//    binsToLabelStr[recoGammaPtBinsStr[recoGammaPtBinsStr.size()-1]] = prettyString(gammaPtBins[0], 1, false) + " < Reco. p_{T,#gamma} < " + prettyString(gammaPtBins[nGammaPtBins], 1, false);
+//
     ///////////////////////////////////////////////////////////////
     //photon pT SUB bins handling
-    const Int_t nGammaPtBinsSub = config_p->GetValue("NGAMMAPTBINSSUB", 9);
+    Int_t nGammaPtBinsSub = config_p->GetValue("NGAMMAPTBINSSUB", 9);
     if(!goodBinning(inConfigFileName, nMaxSubBins, nGammaPtBinsSub, "NGAMMAPTBINSSUB")) return 1;
     const Float_t gammaPtBinsSubLow = config_p->GetValue("GAMMAPTBINSSUBLOW", 50);
     const Float_t gammaPtBinsSubHigh = config_p->GetValue("GAMMAPTBINSSUBHIGH", 1000);
@@ -213,16 +224,17 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
     if(gammaPtBinsSubHigh > gammaPtBinsHigh) std::cout << "ERROR - config \'" << inConfigFileName << "\' contains gammaPtBinsSubHigh \'" << gammaPtBinsSubHigh << "\' greater than gammaPtBinsHigh \'" << gammaPtBinsHigh << "\'. return 1" << std::endl;
     if(gammaPtBinsSubLow < gammaPtBinsLow || gammaPtBinsSubHigh > gammaPtBinsHigh) return 1;
     const Bool_t gammaPtBinsSubDoLog = config_p->GetValue("GAMMAPTBINSDOLOG", 1);
-    Double_t gammaPtBinsSub[nMaxSubBins+1];
+    Double_t gammaPtBinsSub[nGammaPtBinsSub+1];
     if(!doPtBinSubInConfig){
     if(gammaPtBinsSubDoLog) getLogBins(gammaPtBinsSubLow, gammaPtBinsSubHigh, nGammaPtBinsSub, gammaPtBinsSub);
     else getLinBins(gammaPtBinsSubLow, gammaPtBinsSubHigh, nGammaPtBinsSub, gammaPtBinsSub);
     } else{
-        std::vector<int> ptBins_vec = strToVectI(config_p->GetValue("PTBINSSUB", "50,55,60,70,90,130,1000" ));
+        std::vector<int> ptBins_vec = strToVectI(config_p->GetValue("GAMMAPTBINSSUB", "50,55,60,70,90,130,1000" ));
         Int_t tempPtbinSize = ptBins_vec.size();
         for(Int_t ipt=0;ipt<tempPtbinSize;++ipt){
             gammaPtBinsSub[ipt] = ptBins_vec.at(ipt);
         }
+        nGammaPtBinsSub = tempPtbinSize - 1;
     }
     std::vector<std::string> gammaPtBinsSubStr;
     for(Int_t pI = 0; pI < nGammaPtBinsSub; ++pI){
@@ -273,7 +285,7 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
             std::cout << "cI = " << cI << ", eI = " << eI << std::endl;
 
             photon_recoPt_vs_truthPt[cI][eI] = new TH2F(("photon_recoPt_vs_truthPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Truth E_{T}^{#gamma} [GeV];Reco E_{T}^{#gamma} [GeV]", nGammaPtBinsSub, gammaPtBinsSub, nGammaPtBinsSub, gammaPtBinsSub);
-            photonEratio_vs_truthPt[cI][eI] = new TH2F(("photonEratio_vs_truthPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Truth E_{T}^{#gamma} [GeV];Reco E_{T}^{#gamma} / Truth E_{T}^{#gamma}", nGammaPtBins, gammaPtBins, nRatioBins, 0,ratioMax);
+            photonEratio_vs_truthPt[cI][eI] = new TH2F(("photonEratio_vs_truthPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Truth E_{T}^{#gamma} [GeV];Reco E_{T}^{#gamma} / Truth E_{T}^{#gamma}", nGammaPtBins, gammaPtBins, nRatioBins, 0, ratioMax);
             photon_truthPt[cI][eI] = new TH1F(("photon_truthPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Truth E_{T}^{#gamma} [GeV];", 170/2, 30, 200);
             photon_recoPt[cI][eI] = new TH1F(("photon_recoPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Reco E_{T}^{#gamma} [GeV];", 170/2, 30, 200);
             photon_truthPt_vs_avgPt[cI][eI] = new TH1F(("photon_truthPt_vs_avgPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Truth E_{T}^{#gamma} [GeV];<E_{T}> [GeV]", nGammaPtBinsSub, gammaPtBinsSub);
@@ -468,7 +480,7 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
         inTree_p->GetEntry(entry);
 
         double vert_z = vert_z_p->at(0);
-        vert_z /= 1000.;
+        vert_z /= 10.;
         if(vert_z <= -15. || vert_z >= 15.) continue;      
 
         if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl; 
@@ -505,6 +517,10 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
         ///////////////////////////////////////////////////////////
         // photon loop 
         for(unsigned int pI = 0; pI < photon_pt_p->size(); ++pI){
+            double photonPt =  photon_pt_p->at(pI);
+            if(photonPt < 30) continue; // min gamma pT cut
+            if(photonPt >= gammaPtBins[nGammaPtBins]) continue;
+
             if(truthPhotonPt<=0) continue; //prompt isolated photons?!
             if(truthPhotonIso>genIsoCut) continue;
             if(getDR(photon_eta_p->at(pI), photon_phi_p->at(pI), truthPhotonEta, truthPhotonPhi) > phoGenMatchingDR) continue; 
@@ -514,10 +530,6 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
                 if(abs(truthPhotonEta)>=etaBins_i[eI] && abs(truthPhotonEta)<etaBins_f[eI]) tempEtaPos=eI; 
             }
             if(tempEtaPos==-1) continue; //eta cut
-
-            double photonPt =  photon_pt_p->at(pI);
-            if(photonPt < 30) continue; // min gamma pT cut
-            if(photonPt >= gammaPtBins[nGammaPtBins]) continue;
             
             if(doTightID && photon_tight_p->at(pI)!=1) continue;
             if(doIso){

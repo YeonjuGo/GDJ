@@ -77,6 +77,7 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
 
     std::vector<std::string> necessaryParams = {"INDIRNAME",
                                                 "VERSION",
+                                                "SYSTEMATIC",
                                                 "CENTFILENAME",
                                                 "ISPP",
                                                 "ISMC",
@@ -109,6 +110,7 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
     const int NONTIGHT_ISEM = 0x45fc01;
     std::string inCentFileName = config_p->GetValue("CENTFILENAME","");
     std::string version = config_p->GetValue("VERSION","temp");
+    std::string systematic = config_p->GetValue("SYSTEMATIC","nominal");
     const bool doPtCorrectedIso = config_p->GetValue("DOPTCORRECTEDISO", 1);
     const bool doCentCorrectedIso = config_p->GetValue("DOCENTCORRECTEDISO", 1);
     const bool doPtBinInConfig = config_p->GetValue("DOPTBINSINCONFIG", 1);
@@ -134,9 +136,10 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
 
     std::string systStr = "PP";
     if(!isPP) systStr = "PbPb";
-    std::string outFileName = "output/" + version + "/phoTagJetRaa_photonPurity_" + systStr + "Data_" + version + ".root ";
+    std::string capStr = version + "_" + systematic;
+    std::string outFileName = "output/" + version + "/phoTagJetRaa_photonPurity_" + systStr + "Data_" + capStr + ".root ";
     if(isMC)
-        outFileName = "output/" + version + "/phoTagJetRaa_photonPurity_" + systStr + "MC_" + version + ".root ";
+        outFileName = "output/" + version + "/phoTagJetRaa_photonPurity_" + systStr + "MC_" + capStr + ".root ";
 
     centralityFromInput centTable(inCentFileName);
     if(doGlobalDebug) centTable.PrintTableTex();
@@ -483,7 +486,7 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
         inTree_p->GetEntry(entry);
 
         double vert_z = vert_z_p->at(0);
-        vert_z /= 1000.;
+        vert_z /= 10.;
         if(vert_z <= -15. || vert_z >= 15.) continue;      
         if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl; 
 

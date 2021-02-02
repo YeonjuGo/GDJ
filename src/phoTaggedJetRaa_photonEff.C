@@ -77,6 +77,7 @@ int phoTaggedJetRaa_photonEff(std::string inConfigFileName)
 
     std::vector<std::string> necessaryParams = {"INDIRNAME",
                                                 "VERSION",
+                                                "SYSTEMATIC",
                                                 "CENTFILENAME",
                                                 "ISPP",
                                                 "ISMC",
@@ -95,6 +96,7 @@ int phoTaggedJetRaa_photonEff(std::string inConfigFileName)
         "GAMMAPTBINSHIGH",
         "GAMMAPTBINSDOLOG",
         "DOPTBINSSUBINCONFIG",
+        "GAMMAPTBINSSUB",
         "NGAMMAPTBINSSUB",
         "GAMMAPTBINSSUBLOW",
         "GAMMAPTBINSSUBHIGH",
@@ -106,6 +108,7 @@ int phoTaggedJetRaa_photonEff(std::string inConfigFileName)
 
     std::string inCentFileName = config_p->GetValue("CENTFILENAME","");
     std::string version = config_p->GetValue("VERSION","temp");
+    std::string systematic = config_p->GetValue("SYSTEMATIC","nominal");
     const bool doLooseID = config_p->GetValue("DOLOOSEID_PHOTONEFF",0);
     const bool doPtCorrectedIso = config_p->GetValue("DOPTCORRECTEDISO", 1);
     const bool doCentCorrectedIso = config_p->GetValue("DOCENTCORRECTEDISO", 1);
@@ -129,7 +132,8 @@ int phoTaggedJetRaa_photonEff(std::string inConfigFileName)
 
     std::string systStr = "PP";
     if(!isPP) systStr = "PbPb";
-    std::string outFileName = "output/" + version + "/phoTagJetRaa_photonEfficiency_" + systStr + "MC_" + version + ".root ";
+    std::string capStr = version + "_" + systematic;
+    std::string outFileName = "output/" + version + "/phoTagJetRaa_photonEfficiency_" + systStr + "MC_" + capStr + ".root ";
 
     centralityFromInput centTable(inCentFileName);
     if(doGlobalDebug) centTable.PrintTableTex();
@@ -214,12 +218,12 @@ int phoTaggedJetRaa_photonEff(std::string inConfigFileName)
     if(gammaPtBinsSubHigh > gammaPtBinsHigh) std::cout << "ERROR - config \'" << inConfigFileName << "\' contains gammaPtBinsSubHigh \'" << gammaPtBinsSubHigh << "\' greater than gammaPtBinsHigh \'" << gammaPtBinsHigh << "\'. return 1" << std::endl;
     if(gammaPtBinsSubLow < gammaPtBinsLow || gammaPtBinsSubHigh > gammaPtBinsHigh) return 1;
     const Bool_t gammaPtBinsSubDoLog = config_p->GetValue("GAMMAPTBINSDOLOG", 1);
-    Double_t gammaPtBinsSub[nMaxSubBins+1];
+    Double_t gammaPtBinsSub[nGammaPtBinsSub+1];
     if(!doPtBinSubInConfig){
     if(gammaPtBinsSubDoLog) getLogBins(gammaPtBinsSubLow, gammaPtBinsSubHigh, nGammaPtBinsSub, gammaPtBinsSub);
     else getLinBins(gammaPtBinsSubLow, gammaPtBinsSubHigh, nGammaPtBinsSub, gammaPtBinsSub);
     } else{
-        std::vector<int> ptBins_vec = strToVectI(config_p->GetValue("PTBINSSUB", "50,55,60,70,90,130,1000" ));
+        std::vector<int> ptBins_vec = strToVectI(config_p->GetValue("GAMMAPTBINSSUB", "50,55,60,70,90,130,1000" ));
         Int_t tempPtbinSize =  ptBins_vec.size();
         for(Int_t ipt=0;ipt<tempPtbinSize;++ipt){
             gammaPtBinsSub[ipt] = ptBins_vec.at(ipt);
@@ -282,6 +286,11 @@ int phoTaggedJetRaa_photonEff(std::string inConfigFileName)
     TF1* fit_photon_recoIso[nMaxCentBins+1][nPhoEtaBins][nGammaPtBinsSub+1];// gen matching
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
 
+
+    //TString ptLabel[nGAMMAPTBINS+1];
+    //for(Int_t pI = 0; pI < nGammaPtBinsSub+1; ++pI){
+    //    ptLabel[pI] = Form("%d < E_{T} " );
+    //}
     ///////////////////////////////////////////////////////////
     // set histograms 
     for(Int_t cI = 0; cI < nCentBins_withIncBin; ++cI){
@@ -289,11 +298,11 @@ int phoTaggedJetRaa_photonEff(std::string inConfigFileName)
             if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
             std::cout << "cI = " << cI << ", eI = " << eI << std::endl;
 
-            photonEff_TOT_CentDep_Den[cI][eI] = new TH1F(("photonEff_TOT_CentDep_Den_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Arbitrary normalized", nGammaPtBins, gammaPtBins);
-            photonEff_TOT_CentDep_Num[cI][eI] = new TH1F(("photonEff_TOT_CentDep_Num_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Arbitrary normalized", nGammaPtBins, gammaPtBins);
-            photonEff_TOT_CentDep_Eff[cI][eI] = new TH1F(("photonEff_TOT_CentDep_Eff_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Total Efficiency", nGammaPtBins, gammaPtBins);
+            photonEff_TOT_CentDep_Den[cI][eI] = new TH1F(("photonEff_TOT_CentDep_Den_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Arbitrary normalized", nGammaPtBinsSub, gammaPtBinsSub);
+            photonEff_TOT_CentDep_Num[cI][eI] = new TH1F(("photonEff_TOT_CentDep_Num_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Arbitrary normalized", nGammaPtBinsSub, gammaPtBinsSub);
+            photonEff_TOT_CentDep_Eff[cI][eI] = new TH1F(("photonEff_TOT_CentDep_Eff_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Total Efficiency", nGammaPtBinsSub, gammaPtBinsSub);
             
-            if(cI==0){
+            if(cI==0 && !isPP){
                 h2F_photonEff_ISO_Den[eI]  = new TH2F(("h2F_photonEff_ISO_Den_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Centrality [%]", 10, 50, 250, nCentBins, centBinsArr);
                 h2F_photonEff_ISO_Num[eI]  = new TH2F(("h2F_photonEff_ISO_Num_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Centrality [%]", 10, 50, 250, nCentBins, centBinsArr);
                 h2F_photonEff_ISO_Eff[eI]  = new TH2F(("h2F_photonEff_ISO_Eff_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Centrality [%]", 10, 50, 250, nCentBins, centBinsArr);
@@ -301,11 +310,11 @@ int phoTaggedJetRaa_photonEff(std::string inConfigFileName)
                 setSumW2({h2F_photonEff_ISO_Eff[eI], h2F_photonEff_ISO_Den[eI], h2F_photonEff_ISO_Num[eI]});
             }
 
-            photonEff_ID_CentDep_Num[cI][eI] = new TH1F(("photonEff_ID_CentDep_Num_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Arbitrary normalized", nGammaPtBins, gammaPtBins);
-            photonEff_ID_CentDep_Eff[cI][eI] = new TH1F(("photonEff_ID_CentDep_Eff_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Identification Efficiency", nGammaPtBins, gammaPtBins);
+            photonEff_ID_CentDep_Num[cI][eI] = new TH1F(("photonEff_ID_CentDep_Num_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Arbitrary normalized", nGammaPtBinsSub, gammaPtBinsSub);
+            photonEff_ID_CentDep_Eff[cI][eI] = new TH1F(("photonEff_ID_CentDep_Eff_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Identification Efficiency", nGammaPtBinsSub, gammaPtBinsSub);
 
-            photonEff_ISO_CentDep_Num[cI][eI] = new TH1F(("photonEff_ISO_CentDep_Num_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Arbitrary normalized", nGammaPtBins, gammaPtBins);
-            photonEff_ISO_CentDep_Eff[cI][eI] = new TH1F(("photonEff_ISO_CentDep_Eff_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Isolation Efficiency", nGammaPtBins, gammaPtBins);
+            photonEff_ISO_CentDep_Num[cI][eI] = new TH1F(("photonEff_ISO_CentDep_Num_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Arbitrary normalized", nGammaPtBinsSub, gammaPtBinsSub);
+            photonEff_ISO_CentDep_Eff[cI][eI] = new TH1F(("photonEff_ISO_CentDep_Eff_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Gen #gamma p_{T} [GeV];Isolation Efficiency", nGammaPtBinsSub, gammaPtBinsSub);
             photon_arith_meanRecoIso_vs_pt[cI][eI] = new TH1F(("photon_arith_meanRecoIso_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";p_{T}^{#gamma,reco} [GeV];<Iso E_{T}^{reco}>", nGammaPtBinsSub, gammaPtBinsSub);
 
             photon_gaus_meanRecoIso_vs_pt[cI][eI] = new TH1F(("photon_gaus_meanRecoIso_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";p_{T}^{#gamma,reco} [GeV];<Iso E_{T}^{reco}>", nGammaPtBinsSub, gammaPtBinsSub);
@@ -497,7 +506,7 @@ int phoTaggedJetRaa_photonEff(std::string inConfigFileName)
         inTree_p->GetEntry(entry);
 
         double vert_z = vert_z_p->at(0);
-        vert_z /= 1000.;
+        vert_z /= 10.;
         if(vert_z <= -15. || vert_z >= 15.) continue;      
 
         if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl; 
@@ -534,6 +543,12 @@ int phoTaggedJetRaa_photonEff(std::string inConfigFileName)
         ///////////////////////////////////////////////////////////
         // photon loop 
         for(unsigned int pI = 0; pI < photon_pt_p->size(); ++pI){
+            double photonPt = photon_pt_p->at(pI);
+            if(photonPt < gammaPtBinsSub[0]) continue; // min gamma pT cut
+            if(photonPt >= gammaPtBinsSub[nGammaPtBinsSub]) continue;
+            Int_t ptPos = ghostPos(nGammaPtBinsSub, gammaPtBinsSub, photonPt, true, doGlobalDebug);
+            if(doGlobalDebug) std::cout << "ptPos = " <<  ptPos << std::endl;
+
             if(truthPhotonPt<=0) continue; //prompt isolated photons?!
             if(getDR(photon_eta_p->at(pI), photon_phi_p->at(pI), truthPhotonEta, truthPhotonPhi) > phoGenMatchingDR) continue; 
 
@@ -543,11 +558,6 @@ int phoTaggedJetRaa_photonEff(std::string inConfigFileName)
                 if(abs(truthPhotonEta)>=etaBins_i[eI] && abs(truthPhotonEta)<etaBins_f[eI]) tempEtaPos=eI; 
             }
             if(tempEtaPos==-1) continue; //eta cut
-            double photonPt = photon_pt_p->at(pI);
-            if(photonPt < gammaPtBinsSub[0]) continue; // min gamma pT cut
-            if(photonPt >= gammaPtBinsSub[nGammaPtBinsSub]) continue;
-            Int_t ptPos = ghostPos(nGammaPtBinsSub, gammaPtBinsSub, photonPt, true, doGlobalDebug);
-            if(doGlobalDebug) std::cout << "ptPos = " <<  ptPos << std::endl;
 
             /////////////////////////////////////
             // isolation correction

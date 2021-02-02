@@ -28,7 +28,7 @@ MKDIR_OBJ=mkdir -p $(GDJDIR)/obj
 MKDIR_OUTPUT=mkdir -p $(GDJDIR)/output
 MKDIR_PDF=mkdir -p $(GDJDIR)/pdfDir
 
-all: mkdirBin mkdirLib mkdirObj mkdirOutput mkdirPdf obj/centralityFromInput.o obj/checkMakeDir.o obj/configParser.o obj/globalDebugHandler.o obj/keyHandler.o obj/sampleHandler.o lib/libATLASGDJ.so bin/gdjNtuplePreProc.exe bin/gdjNTupleToHist.exe bin/gdjNTupleToHist_dijet.exe bin/gdjHistDumper.exe bin/gdjGammaJetResponsePlot.exe bin/gdjMixedEventPlotter.exe bin/gdjQuarkGluonJetsPlotter.exe bin/gdjResponsePlotter.exe bin/gdjDataMCPlotter_dijet.exe bin/gdjSignalBackgroundPhotonPlotter_dijet.exe bin/gdjDataPbPbPPPlotter.exe bin/gdjDataMCRawPlotter.exe bin/grlToTex.exe bin/testKeyHandler.exe bin/testSampleHandler.exe bin/phoTaggedJetRaa_photonEff.exe bin/phoTaggedJetRaa_photonEnergy.exe bin/phoTaggedJetRaa_photonPurity.exe bin/phoTaggedJetRaa.exe bin/phoTaggedJetRaa_jetPt_photonEffPurCorrected.exe bin/phoTaggedJetRaa_jetPt.exe bin/phoTaggedJetRaa_jetEnergy.exe bin/gdjNtuplePreProc_onlyPhoton.exe bin/gdjNtuplePreProc_phoTaggedJetRaa.exe
+all: mkdirBin mkdirLib mkdirObj mkdirOutput mkdirPdf obj/centralityFromInput.o obj/checkMakeDir.o obj/configParser.o obj/globalDebugHandler.o obj/keyHandler.o obj/sampleHandler.o lib/libATLASGDJ.so bin/gdjNtuplePreProc.exe bin/gdjNTupleToHist.exe bin/gdjNTupleToHist_dijet.exe bin/gdjHistDumper.exe bin/gdjGammaJetResponsePlot.exe bin/gdjMixedEventPlotter.exe bin/gdjQuarkGluonJetsPlotter.exe bin/gdjResponsePlotter.exe bin/gdjDataMCPlotter_dijet.exe bin/gdjSignalBackgroundPhotonPlotter_dijet.exe bin/gdjDataPbPbPPPlotter.exe bin/gdjDataMCRawPlotter.exe bin/grlToTex.exe bin/testKeyHandler.exe bin/testSampleHandler.exe bin/phoTaggedJetRaa_photonEff.exe bin/phoTaggedJetRaa_photonEnergy.exe bin/phoTaggedJetRaa_photonPurity.exe bin/phoTaggedJetRaa.exe bin/phoTaggedJetRaa_jetPt_photonEffPurCorrected.exe bin/phoTaggedJetRaa_jetPt.exe bin/phoTaggedJetRaa_jetEnergy_2DUnfolding.exe bin/phoTaggedJetRaa_jetEnergy.exe bin/gdjNtuplePreProc_onlyPhoton.exe bin/gdjNtuplePreProc_phoTaggedJetRaa.exe
 
 mkdirBin:
 	$(MKDIR_BIN)
@@ -131,6 +131,9 @@ bin/phoTaggedJetRaa_photonEnergy.exe: src/phoTaggedJetRaa_photonEnergy.C
 
 bin/phoTaggedJetRaa_jetEnergy.exe: src/phoTaggedJetRaa_jetEnergy.C
 	$(CXX) $(CXXFLAGS) src/phoTaggedJetRaa_jetEnergy.C -o bin/phoTaggedJetRaa_jetEnergy.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
+
+bin/phoTaggedJetRaa_jetEnergy_2DUnfolding.exe: src/phoTaggedJetRaa_jetEnergy_2DUnfolding.C
+	$(CXX) $(CXXFLAGS) src/phoTaggedJetRaa_jetEnergy_2DUnfolding.C -o bin/phoTaggedJetRaa_jetEnergy_2DUnfolding.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ
 
 bin/phoTaggedJetRaa_jetPt.exe: src/phoTaggedJetRaa_jetPt.C
 	$(CXX) $(CXXFLAGS) src/phoTaggedJetRaa_jetPt.C -o bin/phoTaggedJetRaa_jetPt.exe $(ROOT) $(INCLUDE) $(LIB) -lATLASGDJ

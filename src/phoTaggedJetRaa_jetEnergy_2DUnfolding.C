@@ -59,10 +59,10 @@ void fillTH2(TH2D* inHist_p, Float_t fillVal1, Float_t fillVal2, Float_t weight 
   return;
 }
 
-int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
+int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
 {
-  const Int_t randSeed = 5573; // from coin flips -> binary number 1010111000101
-  TRandom3* randGen_p = new TRandom3(randSeed);
+  //const Int_t randSeed = 5573; // from coin flips -> binary number 1010111000101
+  //TRandom3* randGen_p = new TRandom3(randSeed);
 
   checkMakeDir check;
   if(!check.checkFileExt(inConfigFileName, ".config")) return 1;
@@ -125,8 +125,8 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
   const bool doPtCorrectedIso = config_p->GetValue("DOPTCORRECTEDISO", 1);
   const bool doCentCorrectedIso = config_p->GetValue("DOCENTCORRECTEDISO", 1);
   const Float_t isoCut = config_p->GetValue("ISOCUT", 3);
-  //const Float_t genIsoCut = config_p->GetValue("GENISOCUT", 5);
-  //const Float_t phoGenMatchingDR = config_p->GetValue("PHOGENMATCHINGDR", 0.2);
+  const Float_t genIsoCut = config_p->GetValue("GENISOCUT", 5);
+  const Float_t phoGenMatchingDR = config_p->GetValue("PHOGENMATCHINGDR", 0.2);
   const Float_t phoIsoConeSize = config_p->GetValue("PHOISOCONESIZE", 3);
   std::string label_phoIsoConeSize = Form("%d",(int)(phoIsoConeSize));
 
@@ -156,9 +156,9 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
   std::string systStr = "PP";
   if(!isPP) systStr = "PbPb";
 
-  std::string outFileName = "output/" + version + "/phoTagJetRaa_jetEnergy_" + systStr + "Data_" + version + "_" + systematic + ".root ";
+  std::string outFileName = "output/" + version + "/phoTagJetRaa_jetEnergy_2DUnfolding_" + systStr + "Data_" + version + "_" + systematic + ".root ";
   if(isMC)
-    outFileName = "output/" + version + "/phoTagJetRaa_jetEnergy_" + systStr + "MC_" + version + "_" + systematic + ".root ";
+    outFileName = "output/" + version + "/phoTagJetRaa_jetEnergy_2DUnfolding_" + systStr + "MC_" + version + "_" + systematic + ".root ";
   if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
 
 
@@ -300,13 +300,35 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
     //photon-jet dphi bins handling
   const Double_t gammaJtDPhiCut = mathStringToNum(config_p->GetValue("GAMMAJTDPHI", ""), doGlobalDebug);  
 
-  const int nRatio = 100; 
-  const float ratioMin = 0; 
-  const float ratioMax = 3; 
+  //const int nRatio = 100; 
+  //const float ratioMin = 0; 
+  //const float ratioMax = 3; 
 
-  const int nJet = 100; 
+  //const int nJet = 100; 
   const float jetMin = jtPtBins[0]; 
   const float jetMax = jtPtBins[nJtPtBins]; 
+  const float jetTotRange = jetMax-jetMin; 
+  ///////////////////////////////////////////////////////////////
+  //jet pT bins for 2D unfolding 
+  const Int_t nJtPtBins_for2D = nJtPtBins*nGammaPtBinsSub;
+  std::cout << "nJtPtBins, nGammaPtBinsSub, nJtPtBins_for2D = " << nJtPtBins << ", " << nGammaPtBinsSub << ", " << nJtPtBins_for2D << std::endl;
+  Double_t jtPtBins_for2D[nJtPtBins_for2D+1];
+
+  for(Int_t pI = 0; pI < nGammaPtBinsSub; ++pI){
+      for(Int_t jI = 0; jI < nJtPtBins; ++jI){
+          jtPtBins_for2D[(pI)*nJtPtBins + jI] = jtPtBins[jI] + jetTotRange*pI;
+      }
+  }
+  jtPtBins_for2D[nJtPtBins_for2D] = jtPtBins_for2D[nJtPtBins_for2D-1] + (jtPtBins[nJtPtBins]-jtPtBins[nJtPtBins-1]);
+
+  std::cout << "Binning for nJtPtBins_for2D" << std::endl;
+  for(Int_t pjI = 0; pjI < nJtPtBins_for2D+1; ++pjI){
+      cout << "PT BIN FOR 2D UNFOLDING " << pjI << " = " <<  jtPtBins_for2D[pjI] << endl;
+  }
+
+  //std::cout << nJet << ratioMax << ratioMin << nRatio << gammaJtDPhiCut << nMaxEvt << gammaExclusionDR << isoCut << doCentCorrectedIso << doPtCorrectedIso << std::endl;
+
+  
   ///////////////////////////////////////////////
   // output file and histogram definition
   TFile* outFile_p = new TFile(outFileName.c_str(), "RECREATE");
@@ -315,23 +337,20 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
   TH1F* centrality_p = nullptr;
   TH1F* centrality_Unweighted_p = nullptr;
 
-  TH1F* h1F_genMatchedRecoPt[nMaxCentBins]; // reco gen-matched
-  TH1F* h1F_recoMatchedGenPt[nMaxCentBins]; // gen reco-matched
-  //TH1F* h1F_recoMatchedGenPt_finerBin[nMaxCentBins]; // gen reco-matched
-  //TH1F* h1F_recoPt_noMatching[nMaxCentBins]; // reco not gen-matched
-  //TH1F* h1F_genPt_noMatching[nMaxCentBins]; // gen not reco-matched
-  //TH1F* h1F_genPt_vs_quarkFraction[nMaxCentBins]; // gen not reco-matched
-  TH1F* h1F_genMatchedRecoPt_split[nMaxCentBins]; // reco gen-matched
-  TH1F* h1F_recoMatchedGenPt_split[nMaxCentBins]; // gen reco-matched
-  TH1F* h1F_genMatchedRecoPt_split2[nMaxCentBins]; // reco gen-matched
-  TH1F* h1F_recoMatchedGenPt_split2[nMaxCentBins]; // gen reco-matched
+  TH1F* h1F_genMatchedRecoPt[nMaxCentBins][nPhoEtaBins]; // reco gen-matched
+  TH1F* h1F_recoMatchedGenPt[nMaxCentBins][nPhoEtaBins]; // gen reco-matched
+  TH1F* h1F_genMatchedRecoPt_split[nMaxCentBins][nPhoEtaBins]; // reco gen-matched
+  TH1F* h1F_recoMatchedGenPt_split[nMaxCentBins][nPhoEtaBins]; // gen reco-matched
+  TH1F* h1F_genMatchedRecoPt_split2[nMaxCentBins][nPhoEtaBins]; // reco gen-matched
+  TH1F* h1F_recoMatchedGenPt_split2[nMaxCentBins][nPhoEtaBins]; // gen reco-matched
 
-  TH2D* h2D_reco_over_gen_ratio_vs_genPt[nMaxCentBins]; 
-  TH2D* h2D_reco_over_gen_ratio_vs_genPt_quarkJet[nMaxCentBins]; 
-  TH2D* h2D_reco_over_gen_ratio_vs_genPt_gluonJet[nMaxCentBins]; 
-  TH2D* h2D_genPt_recoPt[nMaxCentBins]; //response matrix
-  TH2D* h2D_genPt_recoPt_split[nMaxCentBins]; //response matrix
-  TH2D* h2D_genPt_recoPt_split2[nMaxCentBins]; //response matrix
+  //TH2D* h2D_reco_over_gen_ratio_vs_genPt[nMaxCentBins]; 
+  //TH2D* h2D_reco_over_gen_ratio_vs_genPt_quarkJet[nMaxCentBins]; 
+  //TH2D* h2D_reco_over_gen_ratio_vs_genPt_gluonJet[nMaxCentBins]; 
+  TH2D* h2D_genPt_recoPt[nMaxCentBins][nPhoEtaBins]; //response matrix
+  TH2D* h2D_genPt_recoPt_split[nMaxCentBins][nPhoEtaBins]; //response matrix
+  TH2D* h2D_genPt_recoPt_split2[nMaxCentBins][nPhoEtaBins]; //response matrix
+  TH2D* h2D_genPt_recoPt_noWeight[nMaxCentBins][nPhoEtaBins]; //response matrix
 
   if(isMC){
     pthat_p = new TH1F(("pthat_" + systStr + "_h").c_str(), ";p_{T} Hat;Counts", 250, 35, 535);
@@ -355,23 +374,26 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
   ////////////////////////////////////////////////
   // define histogram 
   for(Int_t cI = 0; cI < nCentBins; ++cI){
-      h1F_genMatchedRecoPt[cI] = new TH1F(("h1F_genMatchedRecoPt_" + centBinsStr[cI]).c_str(), Form(";Truth-matched Reco p_{T}^{jet};Entries%s",""), nJtPtBins, jtPtBins); 
-      h1F_recoMatchedGenPt[cI] = new TH1F(("h1F_recoMatchedGenPt_" + centBinsStr[cI]).c_str(), Form(";Reco-matched Gen p_{T}^{jet};Entries%s",""), nJtPtBins, jtPtBins); 
-      h1F_genMatchedRecoPt_split[cI] = new TH1F(("h1F_genMatchedRecoPt_split_" + centBinsStr[cI]).c_str(), Form(";Truth-matched Reco p_{T}^{jet};Entries%s",""), nJtPtBins, jtPtBins); 
-      h1F_recoMatchedGenPt_split[cI] = new TH1F(("h1F_recoMatchedGenPt_split_" + centBinsStr[cI]).c_str(), Form(";Reco-matched Gen p_{T}^{jet};Entries%s",""), nJtPtBins, jtPtBins); 
-      h1F_genMatchedRecoPt_split2[cI] = new TH1F(("h1F_genMatchedRecoPt_split2_" + centBinsStr[cI]).c_str(), Form(";Truth-matched Reco p_{T}^{jet};Entries%s",""), nJtPtBins, jtPtBins); 
-      h1F_recoMatchedGenPt_split2[cI] = new TH1F(("h1F_recoMatchedGenPt_split2_" + centBinsStr[cI]).c_str(), Form(";Reco-matched Gen p_{T}^{jet};Entries%s",""), nJtPtBins, jtPtBins); 
-      //h1F_recoMatchedGenPt_finerBin[cI] = new TH1F(("h1F_recoMatchedGenPt_finerBin_" + centBinsStr[cI]).c_str(), Form(";Reco-matched Gen p_{T}^{jet};Entries%s",""), nJet, jetMin, jetMax); 
-      //h1F_recoPt_noMatching[cI] = new TH1F(("h1F_recoPt_noMatching_" + centBinsStr[cI]).c_str(), Form(";Reco p_{T}^{jet};Entries%s",""), nJtPtBins, jtPtBins);
-      //h1F_genPt_noMatching[cI] = new TH1F(("h1F_genPt_noMatching_" + centBinsStr[cI]).c_str(), Form(";Gen p_{T}^{jet};Entries%s",""), nJtPtBins, jtPtBins); 
-      h2D_genPt_recoPt[cI] = new TH2D(("h2D_genPt_recoPt_" + centBinsStr[cI]).c_str(), Form(";Reco p_{T}^{jet}%s;Gen p_{T}^{jet}",""), nJtPtBins, jtPtBins, nJtPtBins, jtPtBins); // x-axis: reco, y-axis: gen
-      h2D_genPt_recoPt_split[cI] = new TH2D(("h2D_genPt_recoPt_split_" + centBinsStr[cI]).c_str(), Form(";Reco p_{T}^{jet}%s;Gen p_{T}^{jet}",""), nJtPtBins, jtPtBins, nJtPtBins, jtPtBins); // x-axis: reco, y-axis: gen
-      h2D_genPt_recoPt_split2[cI] = new TH2D(("h2D_genPt_recoPt_split2_" + centBinsStr[cI]).c_str(), Form(";Reco p_{T}^{jet}%s;Gen p_{T}^{jet}",""), nJtPtBins, jtPtBins, nJtPtBins, jtPtBins); // x-axis: reco, y-axis: gen
-      h2D_reco_over_gen_ratio_vs_genPt[cI] = new TH2D(("h2D_reco_over_gen_ratio_vs_genPt_" + centBinsStr[cI]).c_str(), Form(";Truth p_{T}^{jet};p_{T}^{reco jet}/p_{T}^{truth jet}%s",""), nJet, jetMin, jetMax, nRatio, ratioMin, ratioMax);
+      for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
+          h1F_genMatchedRecoPt[cI][eI] = new TH1F(("h1F_genMatchedRecoPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Truth-matched Reco p_{T}^{jet};Entries%s",""), nJtPtBins_for2D, jtPtBins_for2D); 
+          cout << "temp" << endl;
+          h1F_recoMatchedGenPt[cI][eI] = new TH1F(("h1F_recoMatchedGenPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco-matched Gen p_{T}^{jet};Entries%s",""), nJtPtBins_for2D, jtPtBins_for2D); 
+          h1F_genMatchedRecoPt_split[cI][eI] = new TH1F(("h1F_genMatchedRecoPt_split_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Truth-matched Reco p_{T}^{jet};Entries%s",""), nJtPtBins_for2D, jtPtBins_for2D); 
+          h1F_recoMatchedGenPt_split[cI][eI] = new TH1F(("h1F_recoMatchedGenPt_split_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco-matched Gen p_{T}^{jet};Entries%s",""), nJtPtBins_for2D, jtPtBins_for2D); 
+          h1F_genMatchedRecoPt_split2[cI][eI] = new TH1F(("h1F_genMatchedRecoPt_split2_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Truth-matched Reco p_{T}^{jet};Entries%s",""), nJtPtBins_for2D, jtPtBins_for2D); 
+          h1F_recoMatchedGenPt_split2[cI][eI] = new TH1F(("h1F_recoMatchedGenPt_split2_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco-matched Gen p_{T}^{jet};Entries%s",""), nJtPtBins_for2D, jtPtBins_for2D); 
 
-      h2D_reco_over_gen_ratio_vs_genPt_quarkJet[cI] = new TH2D(("h2D_reco_over_gen_ratio_vs_genPt_quarkJet_" + centBinsStr[cI]).c_str(), Form(";Truth p_{T}^{jet};p_{T}^{reco jet}/p_{T}^{truth jet}%s",""), nJet, jetMin, jetMax, nRatio, ratioMin, ratioMax);
-      h2D_reco_over_gen_ratio_vs_genPt_gluonJet[cI] = new TH2D(("h2D_reco_over_gen_ratio_vs_genPt_gluonJet_" + centBinsStr[cI]).c_str(), Form(";Truth p_{T}^{jet};p_{T}^{reco jet}/p_{T}^{truth jet}%s",""), nJet, jetMin, jetMax, nRatio, ratioMin, ratioMax);
-      //h1F_genPt_vs_quarkFraction[cI] = new TH1F(("h1F_genPt_quarkFraction_" + centBinsStr[cI]).c_str(), Form(";Reco p_{T}^{jet}%s;Fraction",""), nJet, jetMin, jetMax); 
+          h2D_genPt_recoPt[cI][eI] = new TH2D(("h2D_genPt_recoPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco p_{T}^{jet}%s;Gen p_{T}^{jet}",""), nJtPtBins_for2D, jtPtBins_for2D, nJtPtBins_for2D, jtPtBins_for2D); // x-axis: reco, y-axis: gen
+          h2D_genPt_recoPt_split[cI][eI] = new TH2D(("h2D_genPt_recoPt_split_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco p_{T}^{jet}%s;Gen p_{T}^{jet}",""), nJtPtBins_for2D, jtPtBins_for2D, nJtPtBins_for2D, jtPtBins_for2D); // x-axis: reco, y-axis: gen
+          h2D_genPt_recoPt_split2[cI][eI] = new TH2D(("h2D_genPt_recoPt_split2_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco p_{T}^{jet}%s;Gen p_{T}^{jet}",""), nJtPtBins_for2D, jtPtBins_for2D, nJtPtBins_for2D, jtPtBins_for2D); // x-axis: reco, y-axis: gen
+          h2D_genPt_recoPt_noWeight[cI][eI] = new TH2D(("h2D_genPt_recoPt_noWeight_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco p_{T}^{jet}%s;Gen p_{T}^{jet}",""), nJtPtBins_for2D, jtPtBins_for2D, nJtPtBins_for2D, jtPtBins_for2D); // x-axis: reco, y-axis: gen
+
+          //h2D_reco_over_gen_ratio_vs_genPt[cI] = new TH2D(("h2D_reco_over_gen_ratio_vs_genPt_" + centBinsStr[cI]).c_str(), Form(";Truth p_{T}^{jet};p_{T}^{reco jet}/p_{T}^{truth jet}%s",""), nJet, jetMin, jetMax, nRatio, ratioMin, ratioMax);
+
+          //h2D_reco_over_gen_ratio_vs_genPt_quarkJet[cI] = new TH2D(("h2D_reco_over_gen_ratio_vs_genPt_quarkJet_" + centBinsStr[cI]).c_str(), Form(";Truth p_{T}^{jet};p_{T}^{reco jet}/p_{T}^{truth jet}%s",""), nJet, jetMin, jetMax, nRatio, ratioMin, ratioMax);
+          //h2D_reco_over_gen_ratio_vs_genPt_gluonJet[cI] = new TH2D(("h2D_reco_over_gen_ratio_vs_genPt_gluonJet_" + centBinsStr[cI]).c_str(), Form(";Truth p_{T}^{jet};p_{T}^{reco jet}/p_{T}^{truth jet}%s",""), nJet, jetMin, jetMax, nRatio, ratioMin, ratioMax);
+          //h1F_genPt_vs_quarkFraction[cI] = new TH1F(("h1F_genPt_quarkFraction_" + centBinsStr[cI]).c_str(), Form(";Reco p_{T}^{jet}%s;Fraction",""), nJet, jetMin, jetMax); 
+      }
   }
 
 
@@ -436,7 +458,7 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
   std::vector<float>* truth_eta_p=nullptr;
   std::vector<int>* truth_pdg_p=nullptr;
 
-  Float_t truthPhotonPt, truthPhotonPhi, truthPhotonEta;
+  Float_t truthPhotonPt, truthPhotonPhi, truthPhotonEta,  truthPhotonIso;
   
   std::vector<float>* photon_pt_p=nullptr;
   std::vector<float>* photon_eta_p=nullptr;
@@ -487,7 +509,7 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
     inTree_p->SetBranchStatus("truthPhotonPt", 1);
     inTree_p->SetBranchStatus("truthPhotonEta", 1);
     inTree_p->SetBranchStatus("truthPhotonPhi", 1);
-    //inTree_p->SetBranchStatus(("truthPhotonIso"+label_phoIsoConeSize).c_str(), 1);
+    inTree_p->SetBranchStatus(("truthPhotonIso"+label_phoIsoConeSize).c_str(), 1);
   }
   
   if(!isPP){
@@ -545,7 +567,7 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
     inTree_p->SetBranchAddress("truthPhotonPt", &truthPhotonPt);
     inTree_p->SetBranchAddress("truthPhotonEta", &truthPhotonEta);
     inTree_p->SetBranchAddress("truthPhotonPhi", &truthPhotonPhi);
-    //inTree_p->SetBranchAddress(("truthPhotonIso"+label_phoIsoConeSize).c_str(), &truthPhotonIso);
+    inTree_p->SetBranchAddress(("truthPhotonIso"+label_phoIsoConeSize).c_str(), &truthPhotonIso);
   }
 
   if(!isPP){
@@ -643,7 +665,7 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
       bool vectContainsCent = vectContainsInt((Int_t)cent, &skippedCent);
 
       if(!vectContainsCent){
-	std::cout << "phoTaggedJetRaa_jetEnergy Warning - Skipping centrality \'" << (Int_t)cent << "\' as given centrality binning is \'" << centBins[0] << "-" << centBins[centBins.size()-1] << "\'. if this is incorrect please fix." << std::endl;
+	std::cout << "phoTaggedJetRaa_jetEnergy_2DUnfolding Warning - Skipping centrality \'" << (Int_t)cent << "\' as given centrality binning is \'" << centBins[0] << "-" << centBins[centBins.size()-1] << "\'. if this is incorrect please fix." << std::endl;
 	skippedCent.push_back((Int_t)cent);
       }
       continue;
@@ -662,12 +684,15 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl; 
 
     double leadingPhoPt = 0;
+    //double leadingPhoEta = 0;
+    //double leadingPhoPhi = 0;
     int leadingPhoIndex = -1;
     /////////////////////////////////////////////////////////////////////
     // PHOTON LOOP
     for(unsigned int pI = 0; pI < photon_pt_p->size(); ++pI){
-      if(photon_pt_p->at(pI) < gammaPtBinsSub[0]) continue;
-      if(photon_pt_p->at(pI) >= gammaPtBinsSub[nGammaPtBinsSub]) continue;
+        double photonPt = photon_pt_p->at(pI);
+      if(photonPt < gammaPtBinsSub[0]) continue;
+      if(photonPt >= gammaPtBinsSub[nGammaPtBinsSub]) continue;
 
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
 
@@ -676,30 +701,39 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
       if(etaValMain >= etaBins_f[nPhoEtaBins-1]) continue;
       if(etaValMain>= 1.37 &&  etaValMain < 1.52) continue;
 
-      if(leadingPhoPt < photon_pt_p->at(pI)){
-          leadingPhoPt = photon_pt_p->at(pI);
-          leadingPhoIndex = pI;
+      // photon gen matching
+      if(isMC){
+          if(truthPhotonPt<=0) continue; //prompt photons
+          if(truthPhotonPt < gammaPtBinsSub[0]) continue;
+          if(truthPhotonPt >= gammaPtBinsSub[nGammaPtBinsSub]) continue;
+          if(truthPhotonIso>genIsoCut) continue; // truth isolation condition
+          if(getDR(photon_eta_p->at(pI), photon_phi_p->at(pI), truthPhotonEta, truthPhotonPhi) > phoGenMatchingDR) continue;
       }
 
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
+    /////////////////// photon isolation correction
+    float correctedIso = photon_etcone_p->at(pI);
 
-      //if(isMC){
-      //    if(truthPhotonPt<=0) continue; //prompt photons
-      //    if(truthPhotonIso>genIsoCut) continue; // truth isolation condition
-      //    if(getDR(photon_eta_p->at(pI), photon_phi_p->at(pI), truthPhotonEta, truthPhotonPhi) > phoGenMatchingDR) continue;
+    if(doPtCorrectedIso && doCentCorrectedIso)
+        correctedIso = getCorrectedPhotonIsolation(isPP, photon_etcone_p->at(pI), photon_pt_p->at(pI), photon_eta_p->at(pI), cent);
 
-      //    if(leadingPhoPt_genMatchedReco < photon_pt_p->at(pI)){
-      //        leadingPhoPt_genMatchedReco = photon_pt_p->at(pI);
-      //        leadingPhoIndex_genMatchedReco = pI;
-      //    }
-      //}
+    if(!(photon_tight_p->at(pI)==1 && correctedIso < isoCut)) continue;
+
+    ////////////// leading photon pt 
+      if(leadingPhoPt < photonPt){
+          leadingPhoPt = photonPt;
+          leadingPhoIndex = pI;
+      }
+
     }
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
 
     if(leadingPhoIndex == -1) continue;
     //if(leadingPhoIndex_genMatchedReco == -1) isGoodGenMatchedRecoPhoton = false;
 
-    //Int_t ptPos = ghostPos(nGammaPtBinsSub, gammaPtBinsSub, photon_pt_p->at(leadingPhoIndex), true, doGlobalDebug);
+    Int_t ptPos_reco = ghostPos(nGammaPtBinsSub, gammaPtBinsSub, leadingPhoPt, true, doGlobalDebug);
+    Int_t ptPos_gen = ghostPos(nGammaPtBinsSub, gammaPtBinsSub, truthPhotonPt, true, doGlobalDebug);
+
     //Int_t etaPos = ghostPos(nGammaEtaBinsSub, gammaEtaBinsSub, etaValSub, true, doGlobalDebug);
     int tempEtaPos = -1;
     Float_t etaValMain = TMath::Abs(photon_eta_p->at(leadingPhoIndex));
@@ -720,13 +754,6 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
     //if(tempEtaPos_genMatchedReco == -1) isGoodGenMatchedRecoPhoton = false;
 
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
-    /////////////////// photon isolation correction
-    float correctedIso = photon_etcone_p->at(leadingPhoIndex);
-
-    if(doPtCorrectedIso && doCentCorrectedIso)
-        correctedIso = getCorrectedPhotonIsolation(isPP, photon_etcone_p->at(leadingPhoIndex), photon_pt_p->at(leadingPhoIndex), photon_eta_p->at(leadingPhoIndex), cent);
-
-    if(!(photon_tight_p->at(leadingPhoIndex)==1 && correctedIso < isoCut)) continue;
 
 
     ///////////////////////////////////////////////////////////////////////
@@ -768,28 +795,29 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
 
         double recoJetPt = aktRhi_em_xcalib_jet_pt_p->at(jI); 
 
-        fillTH2(h2D_reco_over_gen_ratio_vs_genPt[centPos], truthJetPt, recoJetPt/truthJetPt, fullWeight);
-        if(aktR_truth_jet_partonid_p->at(truthPos) == 21){     
-            fillTH2(h2D_reco_over_gen_ratio_vs_genPt_gluonJet[centPos], truthJetPt, recoJetPt/truthJetPt, fullWeight);
-        } else {
-            fillTH2(h2D_reco_over_gen_ratio_vs_genPt_quarkJet[centPos], truthJetPt, recoJetPt/truthJetPt, fullWeight);
-        }
+        //fillTH2(h2D_reco_over_gen_ratio_vs_genPt[centPos], truthJetPt, recoJetPt/truthJetPt, fullWeight);
+        //if(aktR_truth_jet_partonid_p->at(truthPos) == 21){     
+        //    fillTH2(h2D_reco_over_gen_ratio_vs_genPt_gluonJet[centPos], truthJetPt, recoJetPt/truthJetPt, fullWeight);
+        //} else {
+        //    fillTH2(h2D_reco_over_gen_ratio_vs_genPt_quarkJet[centPos], truthJetPt, recoJetPt/truthJetPt, fullWeight);
+        //}
 
         if(recoJetPt < jetMin || truthJetPt < jetMin) continue;
         if(recoJetPt > jetMax || truthJetPt > jetMax) continue;
 
-        fillTH1(h1F_genMatchedRecoPt[centPos], recoJetPt, fullWeight);
-        fillTH1(h1F_recoMatchedGenPt[centPos], truthJetPt, fullWeight);
+        fillTH1(h1F_genMatchedRecoPt[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, fullWeight);
+        fillTH1(h1F_recoMatchedGenPt[centPos][tempEtaPos], truthJetPt + jetTotRange*ptPos_gen, fullWeight);
         //fillTH1(h1F_recoMatchedGenPt_finerBin[centPos], truthJetPt, fullWeight);
-        fillTH2(h2D_genPt_recoPt[centPos], recoJetPt, truthJetPt, fullWeight); // x-axis: reco, y-axis: gen
+        fillTH2(h2D_genPt_recoPt[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight); // x-axis: reco, y-axis: gen
+        fillTH2(h2D_genPt_recoPt_noWeight[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen); // x-axis: reco, y-axis: gen
         if(isEvenEvt){ 
-            fillTH2(h2D_genPt_recoPt_split[centPos], recoJetPt, truthJetPt, fullWeight); // x-axis: reco, y-axis: gen
-            fillTH1(h1F_genMatchedRecoPt_split[centPos], recoJetPt, fullWeight);
-            fillTH1(h1F_recoMatchedGenPt_split[centPos], truthJetPt, fullWeight);
+            fillTH2(h2D_genPt_recoPt_split[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight); // x-axis: reco, y-axis: gen
+            fillTH1(h1F_genMatchedRecoPt_split[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, fullWeight);
+            fillTH1(h1F_recoMatchedGenPt_split[centPos][tempEtaPos], truthJetPt + jetTotRange*ptPos_gen, fullWeight);
         } else {
-            fillTH2(h2D_genPt_recoPt_split2[centPos], recoJetPt, truthJetPt, fullWeight); // x-axis: reco, y-axis: gen
-            fillTH1(h1F_genMatchedRecoPt_split2[centPos], recoJetPt, fullWeight);
-            fillTH1(h1F_recoMatchedGenPt_split2[centPos], truthJetPt, fullWeight);
+            fillTH2(h2D_genPt_recoPt_split2[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight); // x-axis: reco, y-axis: gen
+            fillTH1(h1F_genMatchedRecoPt_split2[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, fullWeight);
+            fillTH1(h1F_recoMatchedGenPt_split2[centPos][tempEtaPos], truthJetPt + jetTotRange*ptPos_gen, fullWeight);
         }
 
 
@@ -808,22 +836,21 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
   ///////////////////////////////////////////////////////////
   // Write histograms in the output file
   for(Int_t cI = 0; cI < nCentBins; ++cI){
-      h1F_genMatchedRecoPt[cI]->Write("", TObject::kOverwrite);
-      h1F_recoMatchedGenPt[cI]->Write("", TObject::kOverwrite);
-      //h1F_recoMatchedGenPt_finerBin[cI]->Write("", TObject::kOverwrite);
-      //h1F_recoPt_noMatching[cI]->Write("", TObject::kOverwrite);
-      //h1F_genPt_noMatching[cI]->Write("", TObject::kOverwrite);
-      //h1F_genPt_vs_quarkFraction[cI]->Write("", TObject::kOverwrite);
-      h1F_genMatchedRecoPt_split[cI]->Write("", TObject::kOverwrite);
-      h1F_recoMatchedGenPt_split[cI]->Write("", TObject::kOverwrite);
-      h1F_genMatchedRecoPt_split2[cI]->Write("", TObject::kOverwrite);
-      h1F_recoMatchedGenPt_split2[cI]->Write("", TObject::kOverwrite);
-      h2D_reco_over_gen_ratio_vs_genPt[cI]->Write("", TObject::kOverwrite);
-      h2D_reco_over_gen_ratio_vs_genPt_quarkJet[cI]->Write("", TObject::kOverwrite);
-      h2D_reco_over_gen_ratio_vs_genPt_gluonJet[cI]->Write("", TObject::kOverwrite);
-      h2D_genPt_recoPt[cI]->Write("", TObject::kOverwrite);
-      h2D_genPt_recoPt_split[cI]->Write("", TObject::kOverwrite);
-      h2D_genPt_recoPt_split2[cI]->Write("", TObject::kOverwrite);
+      for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
+      h1F_genMatchedRecoPt[cI][eI]->Write("", TObject::kOverwrite);
+      h1F_recoMatchedGenPt[cI][eI]->Write("", TObject::kOverwrite);
+      h1F_genMatchedRecoPt_split[cI][eI]->Write("", TObject::kOverwrite);
+      h1F_recoMatchedGenPt_split[cI][eI]->Write("", TObject::kOverwrite);
+      h1F_genMatchedRecoPt_split2[cI][eI]->Write("", TObject::kOverwrite);
+      h1F_recoMatchedGenPt_split2[cI][eI]->Write("", TObject::kOverwrite);
+      //h2D_reco_over_gen_ratio_vs_genPt[cI]->Write("", TObject::kOverwrite);
+      //h2D_reco_over_gen_ratio_vs_genPt_quarkJet[cI]->Write("", TObject::kOverwrite);
+      //h2D_reco_over_gen_ratio_vs_genPt_gluonJet[cI]->Write("", TObject::kOverwrite);
+      h2D_genPt_recoPt[cI][eI]->Write("", TObject::kOverwrite);
+      h2D_genPt_recoPt_split[cI][eI]->Write("", TObject::kOverwrite);
+      h2D_genPt_recoPt_split2[cI][eI]->Write("", TObject::kOverwrite);
+      h2D_genPt_recoPt_noWeight[cI][eI]->Write("", TObject::kOverwrite);
+  }
   }
 
   //runNumber_p->Write("", TObject::kOverwrite);
@@ -843,19 +870,22 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
     // delete histograms
 
   for(Int_t cI = 0; cI < nCentBins; ++cI){
-     delete h1F_genMatchedRecoPt[cI];
-     delete h1F_recoMatchedGenPt[cI];
-     delete h1F_genMatchedRecoPt_split[cI];
-     delete h1F_recoMatchedGenPt_split[cI];
-     delete h1F_genMatchedRecoPt_split2[cI];
-     delete h1F_recoMatchedGenPt_split2[cI];
+      for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
+     delete h1F_genMatchedRecoPt[cI][eI];
+     delete h1F_recoMatchedGenPt[cI][eI];
+     delete h1F_genMatchedRecoPt_split[cI][eI];
+     delete h1F_recoMatchedGenPt_split[cI][eI];
+     delete h1F_genMatchedRecoPt_split2[cI][eI];
+     delete h1F_recoMatchedGenPt_split2[cI][eI];
 
-     delete h2D_reco_over_gen_ratio_vs_genPt[cI];
-     delete h2D_reco_over_gen_ratio_vs_genPt_quarkJet[cI];
-     delete h2D_reco_over_gen_ratio_vs_genPt_gluonJet[cI];
-     delete h2D_genPt_recoPt[cI];
-     delete h2D_genPt_recoPt_split[cI];
-     delete h2D_genPt_recoPt_split2[cI];
+     //delete h2D_reco_over_gen_ratio_vs_genPt[cI][eI];
+     //delete h2D_reco_over_gen_ratio_vs_genPt_quarkJet[cI][eI];
+     //delete h2D_reco_over_gen_ratio_vs_genPt_gluonJet[cI][eI];
+     delete h2D_genPt_recoPt[cI][eI];
+     delete h2D_genPt_recoPt_split[cI][eI];
+     delete h2D_genPt_recoPt_split2[cI][eI];
+     delete h2D_genPt_recoPt_noWeight[cI][eI];
+  }
   }
   
   //delete runNumber_p;
@@ -882,16 +912,17 @@ int phoTaggedJetRaa_jetEnergy(std::string inConfigFileName)
   outFile_p->Close();
   delete outFile_p;
 
-  delete randGen_p;
+  //delete randGen_p;
   
-  std::cout << "phoTaggedJetRaa_jetEnergy COMPLETE. return 0." << std::endl;
+  
+  std::cout << "phoTaggedJetRaa_jetEnergy_2DUnfolding COMPLETE. return 0." << std::endl;
   return 0;
 }
 
 int main(int argc, char* argv[])
 {
   if(argc != 2){
-    std::cout << "Usage: ./bin/phoTaggedJetRaa_jetEnergy.exe <inConfigFileName>" << std::endl;
+    std::cout << "Usage: ./bin/phoTaggedJetRaa_jetEnergy_2DUnfolding.exe <inConfigFileName>" << std::endl;
     std::cout << "TO DEBUG:" << std::endl;
     std::cout << " export DOGLOBALDEBUGROOT=1 #from command line" << std::endl;
     std::cout << "TO TURN OFF DEBUG:" << std::endl;
@@ -901,6 +932,6 @@ int main(int argc, char* argv[])
   }
  
   int retVal = 0;
-  retVal += phoTaggedJetRaa_jetEnergy(argv[1]);
+  retVal += phoTaggedJetRaa_jetEnergy_2DUnfolding(argv[1]);
   return retVal;
 }

@@ -14,9 +14,14 @@ VER=$1
 VAR=$VER"_"$SYS
 echo "./bin/phoTaggedJetRaa_photonEfficiency.exe for" $VAR
 
+SYS=('jetPtSys_nCentMix80_nPsiMix16_nVZ3_nMix50' 'jetPtSys_nCentMix80_nPsiMix8_nVZ3_nMix50')
+for ((i=0; i< ${#SYS[@]};i++))
+do
+
 ##### photon efficiency
-./bin/phoTaggedJetRaa_photonEff.exe input/phoTagJetRaa/phoTagJetRaa_PbPbMC_$VAR.config >& ./log/$VER/phoTagJetRaa_photonEfficiency_PbPbMC_${VAR}_${DATE}.log &
-./bin/phoTaggedJetRaa_photonEff.exe input/phoTagJetRaa/phoTagJetRaa_PPMC_$VAR.config >& ./log/$VER/phoTagJetRaa_photonEfficiency_PPMC_${VAR}_${DATE}.log & 
+./bin/phoTaggedJetRaa_photonEff.exe input/phoTagJetRaa/phoTagJetRaa_PbPbMC_${VER}_${SYS}.config >& ./log/$VER/phoTagJetRaa_photonEfficiency_PbPbMC_${VER}_${SYS}_${DATE}.log &
+./bin/phoTaggedJetRaa_photonEff.exe input/phoTagJetRaa/phoTagJetRaa_PPMC_${VER}_${SYS}.config >& ./log/$VER/phoTagJetRaa_photonEfficiency_PPMC_${VER}_${SYS}_${DATE}.log 
+
 wait $(jobs -p)
 
 echo 'DONE ./bin/phoTaggedJetRaa_photonEfficiency.exe'
@@ -25,4 +30,3 @@ mv /direct/usatlas+u/goyeonju/phoTaggedJetRaa/photonEfficiency/figures/*.pdf /di
 root -l -b -q '/direct/usatlas+u/goyeonju/phoTaggedJetRaa/photonEfficiency/draw_photon_efficiency_v4.C("PP", "'${VER}'", "'${SYS}'")' &
 root -l -b -q '/direct/usatlas+u/goyeonju/phoTaggedJetRaa/photonEfficiency/draw_photon_efficiency_v4.C("PbPb", "'${VER}'", "'${SYS}'")'
 
-root -l -b -q '/direct/usatlas+u/goyeonju/phoTaggedJetRaa/photonEfficiency/draw_photon_pp_pbpb_together_v1.C("'${VER}'", "'${SYS}'")'

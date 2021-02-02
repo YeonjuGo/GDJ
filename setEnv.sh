@@ -1,6 +1,10 @@
 #!/bin/bash
 
-GDJDIR=/u/user/goyeonju/2020/gammaMultiJets/GDJ/
+# for ACF
+GDJDIR=/usatlas/u/goyeonju/GDJ/
+# for KNU
+#GDJDIR=/u/user/goyeonju/2020/gammaMultiJets/GDJ/
+
 if [[ -d $GDJDIR ]]
 then
     echo "GDJDIR set to '$GDJDIR'; if wrong please fix"
@@ -9,3 +13,4 @@ then
 else
     echo "GDJDIR given, '$GDJDIR' not found!!! Please fix" 
 fi
+export DOGLOBALDEBUGROOT=0
