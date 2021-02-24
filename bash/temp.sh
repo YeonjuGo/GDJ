@@ -1,27 +1,30 @@
 #!/bin/bash
+export DOGLOBALDEBUGROOT=0
 DATE=`date +%Y%m%d`
-VER=$1
-VAR=$1
 
 if [ $# -lt 1 ]; then
-  echo "Usage: ./bash/run_phoTagJetRaa_jetPt.sh <version> <systematic>"
+  echo "Usage: ./bash/run_phoTagJetRaa_all_onlyFor2DUnfolding.sh <version> <systematic>"
   exit 1
+elif [ $# -eq 1 ]; then
+    SYS="nominal"
+elif [ $# -eq 2 ]; then
+    SYS=$2
 fi
 
-if [ $# -eq 2 ]; then
-    VAR=$1"_"$2
-fi
-echo $VAR
+VER=$1
+VAR=$VER"_"$SYS
+echo "./bash/run_phoTagJetRaa_all_onlyFor2DUnfolding.sh for" $VAR
 
-##### jet pT for signal photon
-./bin/phoTaggedJetRaa_jetPt.exe input/phoTagJetRaa/phoTagJetRaa_PbPbMC_$VAR.config 0 >& ./log/$VER/phoTagJetRaa_jetPt_PbPbMC_${VAR}_${DATE}_signal.log &
-./bin/phoTaggedJetRaa_jetPt.exe input/phoTagJetRaa/phoTagJetRaa_PPMC_$VAR.config 0 >& ./log/$VER/phoTagJetRaa_jetPt_PPMC_${VAR}_${DATE}_signal.log &
+mkdir -p output/$VER/
+mkdir -p log/$VER/
 
-##### jet pT for background photon
-./bin/phoTaggedJetRaa_jetPt.exe input/phoTagJetRaa/phoTagJetRaa_PbPbMC_$VAR.config 1 >& ./log/$VER/phoTagJetRaa_jetPt_PbPbMC_${VAR}_${DATE}_bkg.log &
-./bin/phoTaggedJetRaa_jetPt.exe input/phoTagJetRaa/phoTagJetRaa_PPMC_$VAR.config 1 >& ./log/$VER/phoTagJetRaa_jetPt_PPMC_${VAR}_${DATE}_bkg.log
-
-echo 'DONE ./bin/phoTaggedJetRaa_jetPt.exe'
-mv /direct/usatlas+u/goyeonju/phoTaggedJetRaa/jetPt/figures/*.pdf /direct/usatlas+u/goyeonju/phoTaggedJetRaa/jetPt/figures/backup
-root -l -b -q '/direct/usatlas+u/goyeonju/phoTaggedJetRaa/jetPt/draw_jetPtDist_withPurityEfficiencyCorrection_v2.C("PP", "'${VAR}'", 1)' &
-root -l -b -q '/direct/usatlas+u/goyeonju/phoTaggedJetRaa/jetPt/draw_jetPtDist_withPurityEfficiencyCorrection_v2.C("PbPb", "'${VAR}'", 1)'
+#bash bash/run_phoTagJetRaa_photonEnergy.sh $VER $SYS &
+#bash bash/run_phoTagJetRaa_photonEfficiency.sh $VER $SYS &
+#bash bash/run_phoTagJetRaa_photonPurity.sh $VER $SYS &
+#bash bash/run_phoTagJetRaa_jetPt_2DUnfolding.sh $VER $SYS 
+#wait $(jobs -p)
+bash bash/run_phoTagJetRaa_jetEnergy_2DUnfolding.sh $VER $SYS &
+wait $(jobs -p)
+bash bash/run_phoTagJetRaa_unfolding_2DUnfolding.sh $VER $SYS &
+wait $(jobs -p)
+bash bash/run_phoTagJetRaa_finalPlot_2DUnfolding.sh $VER $SYS 

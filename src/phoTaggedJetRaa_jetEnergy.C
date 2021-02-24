@@ -1,5 +1,6 @@
 //Author: Chris McGinn (2020.02.19)
 //Contact at chmc7718@colorado.edu or cffionn on skype for bugs
+//for jet 1D unfolding
 
 //c+cpp
 #include <fstream>

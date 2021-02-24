@@ -24,5 +24,5 @@ wait $(jobs -p)
 echo 'DONE ./bin/phoTaggedJetRaa_jetEnergy_2DUnfolding.exe'
 
 #mv /direct/usatlas+u/goyeonju/phoTaggedJetRaa/jetEnergy/figures/*.pdf /direct/usatlas+u/goyeonju/phoTaggedJetRaa/jetEnergy/figures/backup
-root -l -b -q '/direct/usatlas+u/goyeonju/phoTaggedJetRaa/jetEnergy/draw_jetEnergy_responseMatrix_2DUnfolding_v1.C("PP", "'${VER}'", "'${SYS}'")' & 
-root -l -b -q '/direct/usatlas+u/goyeonju/phoTaggedJetRaa/jetEnergy/draw_jetEnergy_responseMatrix_2DUnfolding_v1.C("PbPb", "'${VER}'", "'${SYS}'")' 
+root -l -b -q '/direct/usatlas+u/goyeonju/phoTaggedJetRaa/jetEnergy/draw_jetEnergy_responseMatrix_2DUnfolding_v2.C("PP", "'${VER}'", "'${SYS}'")' & 
+root -l -b -q '/direct/usatlas+u/goyeonju/phoTaggedJetRaa/jetEnergy/draw_jetEnergy_responseMatrix_2DUnfolding_v2.C("PbPb", "'${VER}'", "'${SYS}'")' 

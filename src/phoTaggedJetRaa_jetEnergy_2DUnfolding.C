@@ -130,6 +130,8 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
   const Float_t phoIsoConeSize = config_p->GetValue("PHOISOCONESIZE", 3);
   std::string label_phoIsoConeSize = Form("%d",(int)(phoIsoConeSize));
 
+  const bool doUnfoldingWeight = config_p->GetValue("DOUNFOLDINGWEIGHT", 1);
+
   const std::string nMaxEvtStr = config_p->GetValue("NEVT", "");
   ULong64_t nMaxEvt = 0;
   if(nMaxEvtStr.size() != 0){
@@ -160,7 +162,6 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
   if(isMC)
     outFileName = "output/" + version + "/phoTagJetRaa_jetEnergy_2DUnfolding_" + systStr + "MC_" + version + "_" + systematic + ".root ";
   if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
-
 
   ///////////////////////////////////////////////////////////////
   // Centrality binning
@@ -233,8 +234,11 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
   std::vector<float> etaBins_i = strToVectF(config_p->GetValue("ETABINS_I", ""));
   std::vector<float> etaBins_f = strToVectF(config_p->GetValue("ETABINS_F", ""));
   std::vector<std::string> etaBinsStr;
-  for(Int_t ieta=0;ieta<nPhoEtaBins;++ieta){
-    etaBinsStr.push_back(Form("Eta%.2fto%.2f",etaBins_i[ieta],etaBins_f[ieta])); 
+  for(Int_t ieta=0;ieta<nPhoEtaBins+1;++ieta){
+    if(ieta<nPhoEtaBins)
+      etaBinsStr.push_back(Form("Eta%.2fto%.2f",etaBins_i[ieta],etaBins_f[ieta])); 
+    else if(ieta==nPhoEtaBins)
+      etaBinsStr.push_back(Form("Eta%.2fto%.2f",etaBins_i[0],etaBins_f[ieta-1])); 
     ReplaceStringInPlace(etaBinsStr[ieta], ".", "p");
   }
   if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
@@ -328,7 +332,31 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
 
   //std::cout << nJet << ratioMax << ratioMin << nRatio << gammaJtDPhiCut << nMaxEvt << gammaExclusionDR << isoCut << doCentCorrectedIso << doPtCorrectedIso << std::endl;
 
-  
+
+  ////////////////////////////////////////
+  // purity corrected jetPt files for unfolding reweight
+  std::string inWeightFileName_data = "/usatlas/u/goyeonju/phoTaggedJetRaa/jetPt/output/phoTagJetRaa_jetPt_purCorrected_for2DUnfolding_" + systStr + "Data_" + version + "_" + systematic + ".root";
+  std::string inWeightFileName_mc = "/usatlas/u/goyeonju/phoTaggedJetRaa/jetPt/output/phoTagJetRaa_jetPt_purCorrected_for2DUnfolding_" + systStr + "MC_" + version + "_" + systematic + ".root";
+
+  if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
+
+  TH1D* h1D_jetPt_purityCorrected_photonPtMerged_mc[nMaxCentBins][nPhoEtaBins+1]; // reco gen-matched
+  TH1D* h1D_jetPt_purityCorrected_photonPtMerged_data[nMaxCentBins][nPhoEtaBins+1]; // reco gen-matched
+  TH1D* h1D_unfoldingWeight[nMaxCentBins][nPhoEtaBins+1]; // reco gen-matched
+  TFile* fw_data = new TFile(Form("%s", inWeightFileName_data.data()),"read");
+  TFile* fw_mc = new TFile(Form("%s", inWeightFileName_mc.data()),"read");
+  for(Int_t cI = 0; cI < nCentBins; ++cI){
+      for(Int_t eI = 0; eI < nPhoEtaBins+1; ++eI){
+        h1D_jetPt_purityCorrected_photonPtMerged_data[cI][eI] = (TH1D*) fw_data->Get(("h1D_jetPt_purityCorrected_photonPtMerged_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str());
+        h1D_jetPt_purityCorrected_photonPtMerged_data[cI][eI]->SetName(Form("%s_data", h1D_jetPt_purityCorrected_photonPtMerged_data[cI][eI]->GetName()));
+
+        h1D_jetPt_purityCorrected_photonPtMerged_mc[cI][eI] = (TH1D*) fw_mc->Get(("h1D_jetPt_purityCorrected_photonPtMerged_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str());
+        h1D_jetPt_purityCorrected_photonPtMerged_mc[cI][eI]->SetName(Form("%s_mc", h1D_jetPt_purityCorrected_photonPtMerged_data[cI][eI]->GetName()));
+        h1D_unfoldingWeight[cI][eI] = (TH1D*) h1D_jetPt_purityCorrected_photonPtMerged_data[cI][eI]->Clone(("h1D_unfoldingWeight_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str());
+        h1D_unfoldingWeight[cI][eI]->Divide(h1D_jetPt_purityCorrected_photonPtMerged_mc[cI][eI]);
+      }
+  }
+
   ///////////////////////////////////////////////
   // output file and histogram definition
   TFile* outFile_p = new TFile(outFileName.c_str(), "RECREATE");
@@ -337,20 +365,25 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
   TH1F* centrality_p = nullptr;
   TH1F* centrality_Unweighted_p = nullptr;
 
-  TH1F* h1F_genMatchedRecoPt[nMaxCentBins][nPhoEtaBins]; // reco gen-matched
-  TH1F* h1F_recoMatchedGenPt[nMaxCentBins][nPhoEtaBins]; // gen reco-matched
-  TH1F* h1F_genMatchedRecoPt_split[nMaxCentBins][nPhoEtaBins]; // reco gen-matched
-  TH1F* h1F_recoMatchedGenPt_split[nMaxCentBins][nPhoEtaBins]; // gen reco-matched
-  TH1F* h1F_genMatchedRecoPt_split2[nMaxCentBins][nPhoEtaBins]; // reco gen-matched
-  TH1F* h1F_recoMatchedGenPt_split2[nMaxCentBins][nPhoEtaBins]; // gen reco-matched
+  TH1F* h1F_genMatchedRecoPt[nMaxCentBins][nPhoEtaBins+1]; // reco gen-matched
+  TH1F* h1F_recoMatchedGenPt[nMaxCentBins][nPhoEtaBins+1]; // gen reco-matched
+  TH1F* h1F_genMatchedRecoPt_split[nMaxCentBins][nPhoEtaBins+1]; // reco gen-matched
+  TH1F* h1F_recoMatchedGenPt_split[nMaxCentBins][nPhoEtaBins+1]; // gen reco-matched
+  TH1F* h1F_genMatchedRecoPt_split2[nMaxCentBins][nPhoEtaBins+1]; // reco gen-matched
+  TH1F* h1F_recoMatchedGenPt_split2[nMaxCentBins][nPhoEtaBins+1]; // gen reco-matched
+
+  //TH1F* h1F_genMatchedRecoPt_photonPtDep[nMaxCentBins][nPhoEtaBins+1][nGammaPtBinsSub]; // reco gen-matched
 
   //TH2D* h2D_reco_over_gen_ratio_vs_genPt[nMaxCentBins]; 
   //TH2D* h2D_reco_over_gen_ratio_vs_genPt_quarkJet[nMaxCentBins]; 
   //TH2D* h2D_reco_over_gen_ratio_vs_genPt_gluonJet[nMaxCentBins]; 
-  TH2D* h2D_genPt_recoPt[nMaxCentBins][nPhoEtaBins]; //response matrix
-  TH2D* h2D_genPt_recoPt_split[nMaxCentBins][nPhoEtaBins]; //response matrix
-  TH2D* h2D_genPt_recoPt_split2[nMaxCentBins][nPhoEtaBins]; //response matrix
-  TH2D* h2D_genPt_recoPt_noWeight[nMaxCentBins][nPhoEtaBins]; //response matrix
+  TH2D* h2D_genPt_recoPt[nMaxCentBins][nPhoEtaBins+1]; //response matrix
+  TH2D* h2D_genPt_recoPt_split[nMaxCentBins][nPhoEtaBins+1]; //response matrix
+  TH2D* h2D_genPt_recoPt_split2[nMaxCentBins][nPhoEtaBins+1]; //response matrix
+  TH2D* h2D_genPt_recoPt_noWeight[nMaxCentBins][nPhoEtaBins+1]; //response matrix
+
+  TH2D* h2D_photonRecoPt_jetRecoPt[nMaxCentBins][nPhoEtaBins+1]; //response matrix
+  TH2D* h2D_dphi_deta_photonReco_jetReco[nMaxCentBins][nPhoEtaBins+1]; //response matrix
 
   if(isMC){
     pthat_p = new TH1F(("pthat_" + systStr + "_h").c_str(), ";p_{T} Hat;Counts", 250, 35, 535);
@@ -374,7 +407,7 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
   ////////////////////////////////////////////////
   // define histogram 
   for(Int_t cI = 0; cI < nCentBins; ++cI){
-      for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
+      for(Int_t eI = 0; eI < nPhoEtaBins+1; ++eI){
           h1F_genMatchedRecoPt[cI][eI] = new TH1F(("h1F_genMatchedRecoPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Truth-matched Reco p_{T}^{jet};Entries%s",""), nJtPtBins_for2D, jtPtBins_for2D); 
           cout << "temp" << endl;
           h1F_recoMatchedGenPt[cI][eI] = new TH1F(("h1F_recoMatchedGenPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco-matched Gen p_{T}^{jet};Entries%s",""), nJtPtBins_for2D, jtPtBins_for2D); 
@@ -387,6 +420,13 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
           h2D_genPt_recoPt_split[cI][eI] = new TH2D(("h2D_genPt_recoPt_split_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco p_{T}^{jet}%s;Gen p_{T}^{jet}",""), nJtPtBins_for2D, jtPtBins_for2D, nJtPtBins_for2D, jtPtBins_for2D); // x-axis: reco, y-axis: gen
           h2D_genPt_recoPt_split2[cI][eI] = new TH2D(("h2D_genPt_recoPt_split2_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco p_{T}^{jet}%s;Gen p_{T}^{jet}",""), nJtPtBins_for2D, jtPtBins_for2D, nJtPtBins_for2D, jtPtBins_for2D); // x-axis: reco, y-axis: gen
           h2D_genPt_recoPt_noWeight[cI][eI] = new TH2D(("h2D_genPt_recoPt_noWeight_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco p_{T}^{jet}%s;Gen p_{T}^{jet}",""), nJtPtBins_for2D, jtPtBins_for2D, nJtPtBins_for2D, jtPtBins_for2D); // x-axis: reco, y-axis: gen
+
+          h2D_photonRecoPt_jetRecoPt[cI][eI] = new TH2D(("h2D_photonRecoPt_jetRecoPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";Reco p_{T}^{jet}%s;Reco p_{T}^{#gamma}",""), 200, 35, 235, 200, 35, 235); // x-axis: reco, y-axis: gen
+          h2D_dphi_deta_photonReco_jetReco[cI][eI] = new TH2D(("h2D_dphi_deta_photonReco_jetReco_" + centBinsStr[cI] + "_" + etaBinsStr[eI]).c_str(), Form(";#Delta#phi(#phi^{#gamma}-#phi^{jet};#Delta#eta(#eta^{#gamma}-#eta^{jet}%s",""), 200, -1.*TMath::Pi(), TMath::Pi(), 200, -5,5); // x-axis: reco, y-axis: gen
+
+          //for(Int_t pI = 0; pI < nGammaPtBinsSub; ++pI){
+          //  h1F_genMatchedRecoPt_photonPtDep[cI][eI][pI] = new TH1F(("h1F_genMatchedRecoPt_photonPtDep_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_" + gammaPtBinsSubStr[pI]).c_str(), Form(";Truth-matched Reco p_{T}^{jet};Entries%s",""), nJtPtBins, jtPtBins); 
+          //}
 
           //h2D_reco_over_gen_ratio_vs_genPt[cI] = new TH2D(("h2D_reco_over_gen_ratio_vs_genPt_" + centBinsStr[cI]).c_str(), Form(";Truth p_{T}^{jet};p_{T}^{reco jet}/p_{T}^{truth jet}%s",""), nJet, jetMin, jetMax, nRatio, ratioMin, ratioMax);
 
@@ -614,7 +654,7 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
   bool didOneFireMiss = false;
   std::vector<int> skippedCent;
   if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl; 
- 
+   
   /////////////////////////////////////////////////////////////////////
   // EVENT LOOP 
   for(ULong64_t entry = 0; entry < nEntries; ++entry){
@@ -684,8 +724,8 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl; 
 
     double leadingPhoPt = 0;
-    //double leadingPhoEta = 0;
-    //double leadingPhoPhi = 0;
+    double leadingPhoEta = 0;
+    double leadingPhoPhi = 0;
     int leadingPhoIndex = -1;
     /////////////////////////////////////////////////////////////////////
     // PHOTON LOOP
@@ -731,12 +771,15 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
     if(leadingPhoIndex == -1) continue;
     //if(leadingPhoIndex_genMatchedReco == -1) isGoodGenMatchedRecoPhoton = false;
 
+    leadingPhoEta = photon_eta_p->at(leadingPhoIndex);
+    leadingPhoPhi = photon_phi_p->at(leadingPhoIndex);
     Int_t ptPos_reco = ghostPos(nGammaPtBinsSub, gammaPtBinsSub, leadingPhoPt, true, doGlobalDebug);
     Int_t ptPos_gen = ghostPos(nGammaPtBinsSub, gammaPtBinsSub, truthPhotonPt, true, doGlobalDebug);
 
+
     //Int_t etaPos = ghostPos(nGammaEtaBinsSub, gammaEtaBinsSub, etaValSub, true, doGlobalDebug);
     int tempEtaPos = -1;
-    Float_t etaValMain = TMath::Abs(photon_eta_p->at(leadingPhoIndex));
+    Float_t etaValMain = TMath::Abs(leadingPhoEta);
     for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
         if(etaValMain>=etaBins_i[eI] && etaValMain<etaBins_f[eI]) tempEtaPos=eI;
     }
@@ -774,19 +817,22 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
     /////////////////////////////////////////////////////////////////////
     // Reco JET LOOP 
     for(unsigned int jI = 0; jI < aktRhi_em_xcalib_jet_pt_p->size(); ++jI){
-        if(aktRhi_em_xcalib_jet_eta_p->at(jI) <= jtEtaBinsLow) continue;
-        if(aktRhi_em_xcalib_jet_eta_p->at(jI) >= jtEtaBinsHigh) continue;
+        double recoJetEta = aktRhi_em_xcalib_jet_eta_p->at(jI);
+        double recoJetPhi = aktRhi_em_xcalib_jet_phi_p->at(jI);
+        if(recoJetEta <= jtEtaBinsLow) continue;
+        if(recoJetEta >= jtEtaBinsHigh) continue;
 
-        Float_t dR = getDR(aktRhi_em_xcalib_jet_eta_p->at(jI), aktRhi_em_xcalib_jet_phi_p->at(jI), photon_eta_p->at(leadingPhoIndex), photon_phi_p->at(leadingPhoIndex));
+        Float_t dR = getDR(recoJetEta, recoJetPhi, leadingPhoEta, leadingPhoPhi);
         if(dR < gammaExclusionDR) continue;
-        Float_t dPhi = TMath::Abs(getDPHI(aktRhi_em_xcalib_jet_phi_p->at(jI), photon_phi_p->at(leadingPhoIndex)));
-        if(dPhi < gammaJtDPhiCut) continue;
+        Float_t dPhi = getDPHI(recoJetPhi,leadingPhoPhi);
+        //Float_t dPhi = TMath::Abs(getDPHI(aktRhi_em_xcalib_jet_phi_p->at(jI), photon_phi_p->at(leadingPhoIndex)));
+        if(TMath::Abs(dPhi) < gammaJtDPhiCut) continue;
 
         //fillTH1(h1F_recoPt_noMatching[centPos], aktRhi_em_xcalib_jet_pt_p->at(jI), fullWeight);
 
         int truthPos = aktRhi_truthpos_p->at(jI);
         if(truthPos < 0) continue; 
-        if(aktR_truth_jet_partonid_p->at(truthPos) == -1) continue; 
+        if(aktR_truth_jet_partonid_p->at(truthPos) == -1) continue; //if not truth matched, continue;
 
         double truthJetPt = aktR_truth_jet_pt_p->at(truthPos); 
         float truthJetEta = aktR_truth_jet_eta_p->at(truthPos); 
@@ -802,22 +848,58 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
         //    fillTH2(h2D_reco_over_gen_ratio_vs_genPt_quarkJet[centPos], truthJetPt, recoJetPt/truthJetPt, fullWeight);
         //}
 
-        if(recoJetPt < jetMin || truthJetPt < jetMin) continue;
-        if(recoJetPt > jetMax || truthJetPt > jetMax) continue;
+        if(truthJetPt < jetMin-20) continue;
+        if(recoJetPt < jetMin-20) continue;
+        if(recoJetPt > jetMax+20) continue;
+        if(truthJetPt > jetMax+20) continue;
+        //if(recoJetPt > jetMax || truthJetPt > jetMax+10) continue;
 
-        fillTH1(h1F_genMatchedRecoPt[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, fullWeight);
-        fillTH1(h1F_recoMatchedGenPt[centPos][tempEtaPos], truthJetPt + jetTotRange*ptPos_gen, fullWeight);
+        double unfoldingWeight = h1D_unfoldingWeight[centPos][tempEtaPos]->GetBinContent(h1D_unfoldingWeight[centPos][tempEtaPos]->FindBin(recoJetPt + jetTotRange*ptPos_reco));
+        double unfoldingWeight_totEta = h1D_unfoldingWeight[centPos][nPhoEtaBins]->GetBinContent(h1D_unfoldingWeight[centPos][nPhoEtaBins]->FindBin(recoJetPt + jetTotRange*ptPos_reco));
+        if(!doUnfoldingWeight){
+          unfoldingWeight = 1.; 
+          unfoldingWeight_totEta = 1.; 
+        }
+        
+        
+    if(doGlobalDebug) std::cout << "number, jetPt, leadingPhoPt, ptPos_reco = " << recoJetPt + jetTotRange*ptPos_reco << ", " << recoJetPt << ", " << leadingPhoPt << ", " << ptPos_reco << endl;
+        
+
+        ////to test
+        //fillTH1(h1F_genMatchedRecoPt_photonPtDep[centPos][tempEtaPos][ptPos_reco], recoJetPt, fullWeight*unfoldingWeight);
+        //fillTH1(h1F_genMatchedRecoPt_photonPtDep[centPos][nPhoEtaBins][ptPos_reco], recoJetPt, fullWeight*unfoldingWeight);
+        //
+
+        fillTH1(h1F_genMatchedRecoPt[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, fullWeight*unfoldingWeight);
+        fillTH1(h1F_recoMatchedGenPt[centPos][tempEtaPos], truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight);
+        fillTH1(h1F_genMatchedRecoPt[centPos][nPhoEtaBins], recoJetPt + jetTotRange*ptPos_reco, fullWeight*unfoldingWeight_totEta);
+        fillTH1(h1F_recoMatchedGenPt[centPos][nPhoEtaBins], truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight_totEta);
         //fillTH1(h1F_recoMatchedGenPt_finerBin[centPos], truthJetPt, fullWeight);
-        fillTH2(h2D_genPt_recoPt[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight); // x-axis: reco, y-axis: gen
-        fillTH2(h2D_genPt_recoPt_noWeight[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen); // x-axis: reco, y-axis: gen
+        fillTH2(h2D_genPt_recoPt[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight); // x-axis: reco, y-axis: gen
+        fillTH2(h2D_genPt_recoPt_noWeight[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, unfoldingWeight); // x-axis: reco, y-axis: gen
+        fillTH2(h2D_genPt_recoPt[centPos][nPhoEtaBins], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight_totEta); // x-axis: reco, y-axis: gen
+        fillTH2(h2D_genPt_recoPt_noWeight[centPos][nPhoEtaBins], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, unfoldingWeight_totEta); // x-axis: reco, y-axis: gen
+        fillTH2(h2D_photonRecoPt_jetRecoPt[centPos][tempEtaPos], recoJetPt, leadingPhoPt, fullWeight*unfoldingWeight_totEta); // x-axis: reco, y-axis: gen
+        fillTH2(h2D_photonRecoPt_jetRecoPt[centPos][nPhoEtaBins], recoJetPt, leadingPhoPt, fullWeight*unfoldingWeight_totEta); // x-axis: reco, y-axis: gen
+
+        fillTH2(h2D_dphi_deta_photonReco_jetReco[centPos][tempEtaPos], dPhi, recoJetEta-leadingPhoEta, fullWeight*unfoldingWeight_totEta); // x-axis: reco, y-axis: gen
+
+        fillTH2(h2D_dphi_deta_photonReco_jetReco[centPos][nPhoEtaBins], dPhi, recoJetEta-leadingPhoEta, fullWeight*unfoldingWeight_totEta); // x-axis: reco, y-axis: gen
+        
         if(isEvenEvt){ 
-            fillTH2(h2D_genPt_recoPt_split[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight); // x-axis: reco, y-axis: gen
-            fillTH1(h1F_genMatchedRecoPt_split[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, fullWeight);
-            fillTH1(h1F_recoMatchedGenPt_split[centPos][tempEtaPos], truthJetPt + jetTotRange*ptPos_gen, fullWeight);
+            fillTH2(h2D_genPt_recoPt_split[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight); // x-axis: reco, y-axis: gen
+            fillTH1(h1F_genMatchedRecoPt_split[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, fullWeight*unfoldingWeight);
+            fillTH1(h1F_recoMatchedGenPt_split[centPos][tempEtaPos], truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight);
+           fillTH2(h2D_genPt_recoPt_split[centPos][nPhoEtaBins], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight_totEta); // x-axis: reco, y-axis: gen
+            fillTH1(h1F_genMatchedRecoPt_split[centPos][nPhoEtaBins], recoJetPt + jetTotRange*ptPos_reco, fullWeight*unfoldingWeight_totEta);
+            fillTH1(h1F_recoMatchedGenPt_split[centPos][nPhoEtaBins], truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight_totEta);
         } else {
-            fillTH2(h2D_genPt_recoPt_split2[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight); // x-axis: reco, y-axis: gen
-            fillTH1(h1F_genMatchedRecoPt_split2[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, fullWeight);
-            fillTH1(h1F_recoMatchedGenPt_split2[centPos][tempEtaPos], truthJetPt + jetTotRange*ptPos_gen, fullWeight);
+            fillTH2(h2D_genPt_recoPt_split2[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight); // x-axis: reco, y-axis: gen
+            fillTH1(h1F_genMatchedRecoPt_split2[centPos][tempEtaPos], recoJetPt + jetTotRange*ptPos_reco, fullWeight*unfoldingWeight);
+            fillTH1(h1F_recoMatchedGenPt_split2[centPos][tempEtaPos], truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight);
+            fillTH2(h2D_genPt_recoPt_split2[centPos][nPhoEtaBins], recoJetPt + jetTotRange*ptPos_reco, truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight_totEta); // x-axis: reco, y-axis: gen
+            fillTH1(h1F_genMatchedRecoPt_split2[centPos][nPhoEtaBins], recoJetPt + jetTotRange*ptPos_reco, fullWeight*unfoldingWeight_totEta);
+            fillTH1(h1F_recoMatchedGenPt_split2[centPos][nPhoEtaBins], truthJetPt + jetTotRange*ptPos_gen, fullWeight*unfoldingWeight_totEta);
         }
 
 
@@ -836,7 +918,7 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
   ///////////////////////////////////////////////////////////
   // Write histograms in the output file
   for(Int_t cI = 0; cI < nCentBins; ++cI){
-      for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
+      for(Int_t eI = 0; eI < nPhoEtaBins+1; ++eI){
       h1F_genMatchedRecoPt[cI][eI]->Write("", TObject::kOverwrite);
       h1F_recoMatchedGenPt[cI][eI]->Write("", TObject::kOverwrite);
       h1F_genMatchedRecoPt_split[cI][eI]->Write("", TObject::kOverwrite);
@@ -850,6 +932,13 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
       h2D_genPt_recoPt_split[cI][eI]->Write("", TObject::kOverwrite);
       h2D_genPt_recoPt_split2[cI][eI]->Write("", TObject::kOverwrite);
       h2D_genPt_recoPt_noWeight[cI][eI]->Write("", TObject::kOverwrite);
+      h2D_photonRecoPt_jetRecoPt[cI][eI]->Write("", TObject::kOverwrite);
+      h2D_dphi_deta_photonReco_jetReco[cI][eI]->Write("", TObject::kOverwrite);
+      //for(Int_t pI = 0; pI < nGammaPtBinsSub; ++pI)
+      //  h1F_genMatchedRecoPt_photonPtDep[cI][eI][pI]->Write("", TObject::kOverwrite);
+      h1D_jetPt_purityCorrected_photonPtMerged_data[cI][eI]->Write("", TObject::kOverwrite);
+      h1D_jetPt_purityCorrected_photonPtMerged_mc[cI][eI]->Write("", TObject::kOverwrite);
+      h1D_unfoldingWeight[cI][eI]->Write("", TObject::kOverwrite);
   }
   }
 
@@ -870,7 +959,7 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
     // delete histograms
 
   for(Int_t cI = 0; cI < nCentBins; ++cI){
-      for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
+      for(Int_t eI = 0; eI < nPhoEtaBins+1; ++eI){
      delete h1F_genMatchedRecoPt[cI][eI];
      delete h1F_recoMatchedGenPt[cI][eI];
      delete h1F_genMatchedRecoPt_split[cI][eI];
@@ -885,6 +974,14 @@ int phoTaggedJetRaa_jetEnergy_2DUnfolding(std::string inConfigFileName)
      delete h2D_genPt_recoPt_split[cI][eI];
      delete h2D_genPt_recoPt_split2[cI][eI];
      delete h2D_genPt_recoPt_noWeight[cI][eI];
+     delete h2D_photonRecoPt_jetRecoPt[cI][eI];
+     delete h2D_dphi_deta_photonReco_jetReco[cI][eI];
+     //for(Int_t pI = 0; pI < nGammaPtBinsSub; ++pI)
+     //  delete h1F_genMatchedRecoPt_photonPtDep[cI][eI][pI];
+     
+     delete h1D_jetPt_purityCorrected_photonPtMerged_data[cI][eI];
+     delete h1D_jetPt_purityCorrected_photonPtMerged_mc[cI][eI];
+     delete h1D_unfoldingWeight[cI][eI];
   }
   }
   

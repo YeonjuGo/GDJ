@@ -254,6 +254,7 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
         etaBinsStr.push_back(Form("Eta%.2fto%.2f",etaBins_i[ieta],etaBins_f[ieta]));
         ReplaceStringInPlace(etaBinsStr[ieta], ".", "p");
     }
+    etaBinsStr.push_back(Form("Eta%.2fto%.2f",etaBins_i[0],etaBins_f[nPhoEtaBins-1]));
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
 
     ////////////////////////////////////////////////////////////
@@ -265,17 +266,18 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
     TH1F* centrality_p = nullptr;
     TH1F* centrality_Unweighted_p = nullptr;
 
-    TH2F* photon_recoPt_vs_truthPt[nMaxCentBins+1][nPhoEtaBins];
-    TH2F* photonEratio_vs_truthPt[nMaxCentBins+1][nPhoEtaBins];
-    TH1F* photon_truthPt[nMaxCentBins+1][nPhoEtaBins];
-    TH1F* photon_recoPt[nMaxCentBins+1][nPhoEtaBins];
-    TH1F* photon_truthPt_vs_avgPt[nMaxCentBins+1][nPhoEtaBins];
-    TH1F* photon_recoPt_vs_avgPt[nMaxCentBins+1][nPhoEtaBins];
-    TH1F* photon_truthPt_analysisBin[nMaxCentBins+1][nPhoEtaBins];
-    TH1F* photon_recoPt_analysisBin[nMaxCentBins+1][nPhoEtaBins];
-    double sumPtInEachGammaPtBin_truthPt[nMaxCentBins+1][nPhoEtaBins][nGammaPtBinsSub];
-    double sumPtInEachGammaPtBin_recoPt[nMaxCentBins+1][nPhoEtaBins][nGammaPtBinsSub];
-    int nPhotonInEachGammaPtBin[nMaxCentBins+1][nPhoEtaBins][nGammaPtBinsSub];
+    TH2F* photon_recoPt_vs_truthPt[nMaxCentBins+1][nPhoEtaBins+1];
+    TH2F* photonEratio_vs_truthPt[nMaxCentBins+1][nPhoEtaBins+1];
+    TH2F* photonEratio_vs_recoPt[nMaxCentBins+1][nPhoEtaBins+1];
+    TH1F* photon_truthPt[nMaxCentBins+1][nPhoEtaBins+1];
+    TH1F* photon_recoPt[nMaxCentBins+1][nPhoEtaBins+1];
+    TH1F* photon_truthPt_vs_avgPt[nMaxCentBins+1][nPhoEtaBins+1];
+    TH1F* photon_recoPt_vs_avgPt[nMaxCentBins+1][nPhoEtaBins+1];
+    TH1F* photon_truthPt_analysisBin[nMaxCentBins+1][nPhoEtaBins+1];
+    TH1F* photon_recoPt_analysisBin[nMaxCentBins+1][nPhoEtaBins+1];
+    double sumPtInEachGammaPtBin_truthPt[nMaxCentBins+1][nPhoEtaBins+1][nGammaPtBinsSub];
+    double sumPtInEachGammaPtBin_recoPt[nMaxCentBins+1][nPhoEtaBins+1][nGammaPtBinsSub];
+    int nPhotonInEachGammaPtBin[nMaxCentBins+1][nPhoEtaBins+1][nGammaPtBinsSub];
 
     ///////////////////////////////////////////////////////////
     // set histograms 
@@ -286,6 +288,7 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
 
             photon_recoPt_vs_truthPt[cI][eI] = new TH2F(("photon_recoPt_vs_truthPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Truth E_{T}^{#gamma} [GeV];Reco E_{T}^{#gamma} [GeV]", nGammaPtBinsSub, gammaPtBinsSub, nGammaPtBinsSub, gammaPtBinsSub);
             photonEratio_vs_truthPt[cI][eI] = new TH2F(("photonEratio_vs_truthPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Truth E_{T}^{#gamma} [GeV];Reco E_{T}^{#gamma} / Truth E_{T}^{#gamma}", nGammaPtBins, gammaPtBins, nRatioBins, 0, ratioMax);
+            photonEratio_vs_recoPt[cI][eI] = new TH2F(("photonEratio_vs_recoPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Reco E_{T}^{#gamma} [GeV];Truth E_{T}^{#gamma} / Reco E_{T}^{#gamma}", nGammaPtBins, gammaPtBins, nRatioBins, 0, ratioMax);
             photon_truthPt[cI][eI] = new TH1F(("photon_truthPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Truth E_{T}^{#gamma} [GeV];", 170/2, 30, 200);
             photon_recoPt[cI][eI] = new TH1F(("photon_recoPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Reco E_{T}^{#gamma} [GeV];", 170/2, 30, 200);
             photon_truthPt_vs_avgPt[cI][eI] = new TH1F(("photon_truthPt_vs_avgPt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";Truth E_{T}^{#gamma} [GeV];<E_{T}> [GeV]", nGammaPtBinsSub, gammaPtBinsSub);
@@ -295,6 +298,8 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
 
             centerTitles({photon_recoPt_vs_truthPt[cI][eI],photonEratio_vs_truthPt[cI][eI]});
             setSumW2({photon_recoPt_vs_truthPt[cI][eI],photonEratio_vs_truthPt[cI][eI]});
+            centerTitles({photon_recoPt_vs_truthPt[cI][eI],photonEratio_vs_recoPt[cI][eI]});
+            setSumW2({photon_recoPt_vs_truthPt[cI][eI],photonEratio_vs_recoPt[cI][eI]});
             centerTitles({photon_truthPt[cI][eI],photon_recoPt[cI][eI]});
             setSumW2({photon_truthPt[cI][eI],photon_recoPt[cI][eI]});
             centerTitles({photon_truthPt_vs_avgPt[cI][eI],photon_recoPt_vs_avgPt[cI][eI]});
@@ -542,9 +547,15 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
             // fill hist
             fillTH2(photon_recoPt_vs_truthPt[centPos][tempEtaPos],photonPt,truthPhotonPt,fullWeight);
             fillTH2(photonEratio_vs_truthPt[centPos][tempEtaPos],truthPhotonPt,photonPt/truthPhotonPt,fullWeight);
+            fillTH2(photonEratio_vs_recoPt[centPos][tempEtaPos],photonPt,photonPt/truthPhotonPt,fullWeight);
+            //fillTH2(photonEratio_vs_recoPt[centPos][tempEtaPos],photonPt,truthPhotonPt/photonPt,fullWeight);
+            //
+            //merged centrality 
             if(!isPP){
                 fillTH2(photon_recoPt_vs_truthPt[nCentBins][tempEtaPos],photonPt,truthPhotonPt,fullWeight);
                 fillTH2(photonEratio_vs_truthPt[nCentBins][tempEtaPos],truthPhotonPt,photonPt/truthPhotonPt,fullWeight);
+                fillTH2(photonEratio_vs_recoPt[nCentBins][tempEtaPos],photonPt,photonPt/truthPhotonPt,fullWeight);
+                //fillTH2(photonEratio_vs_recoPt[nCentBins][tempEtaPos],photonPt,truthPhotonPt/photonPt,fullWeight);
             }
 
             fillTH1(photon_truthPt[centPos][tempEtaPos],truthPhotonPt,fullWeight);
@@ -590,6 +601,7 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
         for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
             photon_recoPt_vs_truthPt[cI][eI]->Write("", TObject::kOverwrite);
             photonEratio_vs_truthPt[cI][eI]->Write("", TObject::kOverwrite);
+            photonEratio_vs_recoPt[cI][eI]->Write("", TObject::kOverwrite);
             photon_truthPt_vs_avgPt[cI][eI]->Write("", TObject::kOverwrite);
             photon_recoPt_vs_avgPt[cI][eI]->Write("", TObject::kOverwrite);
         }
@@ -611,6 +623,7 @@ int phoTaggedJetRaa_photonEnergy(std::string inConfigFileName)
         for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
             delete photon_recoPt_vs_truthPt[cI][eI];
             delete photonEratio_vs_truthPt[cI][eI];
+            delete photonEratio_vs_recoPt[cI][eI];
         }
     }
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;

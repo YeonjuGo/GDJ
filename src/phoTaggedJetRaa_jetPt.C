@@ -551,6 +551,9 @@ int phoTaggedJetRaa_jetPt(std::string inConfigFileName, bool doBkgPhoton = false
   TH1F* h1F_genMatchedRecoJet_jetPt[nMaxCentBins][nPhoEtaBins][nGammaPtBinsSub+1];
   TH1F* h1F_genMatchedRecoJet_dphi[nMaxCentBins][nPhoEtaBins][nGammaPtBinsSub+1];
 
+  //TH2D* h2D_photonRecoPt_jetRecoPt[nMaxCentBins][nPhoEtaBins+1]; //response matrix
+  //TH2D* h2D_dphi_deta_photonReco_jetReco[nMaxCentBins][nPhoEtaBins+1]; //response matrix
+
   if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
 
   if(isMC){

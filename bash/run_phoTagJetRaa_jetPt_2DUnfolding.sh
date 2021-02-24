@@ -12,6 +12,7 @@ fi
 
 VER=$1
 VAR=$VER"_"$SYS
+echo "./bin/phoTaggedJetRaa_jetPt.exe for" $VAR
 echo $VAR
 
 ##### jet pT for signal photon

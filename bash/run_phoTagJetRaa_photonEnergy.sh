@@ -19,7 +19,7 @@ echo "./bin/phoTaggedJetRaa_photonEnergy.exe for" $VAR
 ./bin/phoTaggedJetRaa_photonEnergy.exe input/phoTagJetRaa/phoTagJetRaa_PbPbMC_$VAR.config >& ./log/$VER/phoTagJetRaa_photonEnergy_PbPbMC_${VAR}_${DATE}.log &
 ./bin/phoTaggedJetRaa_photonEnergy.exe input/phoTagJetRaa/phoTagJetRaa_PPMC_$VAR.config >& ./log/$VER/phoTagJetRaa_photonEnergy_PPMC_${VAR}_${DATE}.log 
 wait $(jobs -p)
- #echo 'DONE ./bin/phoTaggedJetRaa_photonEnergy.exe'
+echo 'DONE ./bin/phoTaggedJetRaa_photonEnergy.exe'
 
 mv /direct/usatlas+u/goyeonju/phoTaggedJetRaa/photonEnergy/figures/*.pdf /direct/usatlas+u/goyeonju/phoTaggedJetRaa/photonEnergy/figures/backup
 root -l -b -q '/direct/usatlas+u/goyeonju/phoTaggedJetRaa/photonEnergy/draw_photon_energy_v1.C("PP", "'${VER}'", "'${SYS}'")' &

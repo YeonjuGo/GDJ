@@ -14,7 +14,7 @@
 #include "TEnv.h"
 #include "TFile.h"
 #include "TChain.h"
-#include "TH1F.h"
+#include "TH1D.h"
 #include "TH2F.h"
 #include "TLorentzVector.h"
 #include "TMath.h"
@@ -42,7 +42,7 @@
 #include "include/returnFileList.h"
 #include "/direct/usatlas+u/goyeonju/phoTaggedJetRaa/include/yjUtility.h"
 
-void fillTH1(TH1F* inHist_p, Float_t fillVal, Float_t weight = -1.0)
+void fillTH1(TH1D* inHist_p, Float_t fillVal, Float_t weight = -1.0)
 {
     if(weight < 0) inHist_p->Fill(fillVal);
     else{
@@ -259,35 +259,36 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
     // define histograms  
 
     TFile* outFile_p = new TFile(outFileName.c_str(), "RECREATE");
-    TH1F* runNumber_p = nullptr;
-    TH1F* pthat_p = nullptr;
-    TH1F* pthat_Unweighted_p = nullptr;
-    TH1F* centrality_p = nullptr;
-    TH1F* centrality_Unweighted_p = nullptr;
+    TH1D* runNumber_p = nullptr;
+    TH1D* pthat_p = nullptr;
+    TH1D* pthat_Unweighted_p = nullptr;
+    TH1D* centrality_p = nullptr;
+    TH1D* centrality_Unweighted_p = nullptr;
 
-    TH1F* h1F_photon_isoDist_tot[nMaxCentBins][nPhoEtaBins][nGammaPtBinsSub];
-    TH1F* h1F_photon_isoDist_bkg[nMaxCentBins][nPhoEtaBins][nGammaPtBinsSub];
-    TH1F* h1F_photon_isoDist_sig[nMaxCentBins][nPhoEtaBins][nGammaPtBinsSub];
-    TH1F* h1F_photon_purity_vs_pt[nMaxCentBins][nPhoEtaBins];
-    TH1F* h1F_photon_yieldA_vs_pt[nMaxCentBins][nPhoEtaBins];
-    TH1F* h1F_photon_yieldB_vs_pt[nMaxCentBins][nPhoEtaBins];
-    TH1F* h1F_photon_yieldC_vs_pt[nMaxCentBins][nPhoEtaBins];
-    TH1F* h1F_photon_yieldD_vs_pt[nMaxCentBins][nPhoEtaBins];
-    TH1F* h1F_photon_yieldA_vs_pt_fineBinning[nMaxCentBins][nPhoEtaBins];
-    TH1F* h1F_photon_yieldB_vs_pt_fineBinning[nMaxCentBins][nPhoEtaBins];
-    TH1F* h1F_photon_yieldC_vs_pt_fineBinning[nMaxCentBins][nPhoEtaBins];
-    TH1F* h1F_photon_yieldD_vs_pt_fineBinning[nMaxCentBins][nPhoEtaBins];
+    TH1D* h1D_photon_isoDist_tot[nMaxCentBins][nPhoEtaBins][nGammaPtBinsSub];
+    TH1D* h1D_photon_isoDist_bkg[nMaxCentBins][nPhoEtaBins][nGammaPtBinsSub];
+    TH1D* h1D_photon_isoDist_sig[nMaxCentBins][nPhoEtaBins][nGammaPtBinsSub];
+    TH1D* h1D_photon_purity_vs_pt[nMaxCentBins][nPhoEtaBins];
+    TH1D* h1D_photon_yieldA_vs_pt[nMaxCentBins][nPhoEtaBins];
+    TH1D* h1D_photon_yieldB_vs_pt[nMaxCentBins][nPhoEtaBins];
+    TH1D* h1D_photon_yieldC_vs_pt[nMaxCentBins][nPhoEtaBins];
+    TH1D* h1D_photon_yieldD_vs_pt[nMaxCentBins][nPhoEtaBins];
+    TH1D* h1D_photon_yieldA_vs_pt_fineBinning[nMaxCentBins][nPhoEtaBins];
+    TH1D* h1D_photon_yieldB_vs_pt_fineBinning[nMaxCentBins][nPhoEtaBins];
+    TH1D* h1D_photon_yieldC_vs_pt_fineBinning[nMaxCentBins][nPhoEtaBins];
+    TH1D* h1D_photon_yieldD_vs_pt_fineBinning[nMaxCentBins][nPhoEtaBins];
+    TH1D* h1D_photon_ptMean[nMaxCentBins][nPhoEtaBins];
 
     if(isMC){
-        pthat_p = new TH1F(("pthat_" + systStr + "_h").c_str(), ";p_{T} Hat;Counts", 250, 35, 535);
-        pthat_Unweighted_p = new TH1F(("pthat_Unweighted_" + systStr + "_h").c_str(), ";p_{T} Hat;Counts", 250, 35, 535);
+        pthat_p = new TH1D(("pthat_" + systStr + "_h").c_str(), ";p_{T} Hat;Counts", 250, 35, 535);
+        pthat_Unweighted_p = new TH1D(("pthat_Unweighted_" + systStr + "_h").c_str(), ";p_{T} Hat;Counts", 250, 35, 535);
         centerTitles({pthat_p, pthat_Unweighted_p});
     }
     if(!isPP){
-        centrality_p = new TH1F(("centrality_" + systStr + "_h").c_str(), ";Centrality (%);Counts", 100, -0.5, 99.5);
+        centrality_p = new TH1D(("centrality_" + systStr + "_h").c_str(), ";Centrality (%);Counts", 100, -0.5, 99.5);
         centerTitles(centrality_p);
         if(isMC){
-            centrality_Unweighted_p = new TH1F(("centrality_Unweighted_" + systStr + "_h").c_str(), ";Centrality (%);Counts", 100, -0.5, 99.5);
+            centrality_Unweighted_p = new TH1D(("centrality_Unweighted_" + systStr + "_h").c_str(), ";Centrality (%);Counts", 100, -0.5, 99.5);
             centerTitles(centrality_Unweighted_p);
         }
     }
@@ -300,23 +301,26 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
             if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
             std::cout << "cI = " << cI << ", eI = " << eI << std::endl;
             for(Int_t pI = 0; pI < nGammaPtBinsSub; ++pI){
-                h1F_photon_isoDist_tot[cI][eI][pI] = new TH1F(("h1F_photon_isoDist_tot_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_" + gammaPtBinsSubStr[pI] + "_h").c_str(), ";#gamma E_{T}^{Iso} [GeV];", nIso, minIso, maxIso);
-                h1F_photon_isoDist_bkg[cI][eI][pI] = new TH1F(("h1F_photon_isoDist_bkg_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_" + gammaPtBinsSubStr[pI] + "_h").c_str(), ";#gamma E_{T}^{Iso} [GeV];", nIso, minIso, maxIso);
-                h1F_photon_isoDist_sig[cI][eI][pI] = new TH1F(("h1F_photon_isoDist_sig_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_" + gammaPtBinsSubStr[pI] + "_h").c_str(), ";#gamma E_{T}^{Iso} [GeV];", nIso, minIso, maxIso);
-                centerTitles({h1F_photon_isoDist_tot[cI][eI][pI],h1F_photon_isoDist_sig[cI][eI][pI],h1F_photon_isoDist_bkg[cI][eI][pI]});
-                setSumW2({h1F_photon_isoDist_tot[cI][eI][pI],h1F_photon_isoDist_sig[cI][eI][pI],h1F_photon_isoDist_bkg[cI][eI][pI]});
+                h1D_photon_isoDist_tot[cI][eI][pI] = new TH1D(("h1D_photon_isoDist_tot_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_" + gammaPtBinsSubStr[pI] + "_h").c_str(), ";#gamma E_{T}^{Iso} [GeV];", nIso, minIso, maxIso);
+                h1D_photon_isoDist_bkg[cI][eI][pI] = new TH1D(("h1D_photon_isoDist_bkg_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_" + gammaPtBinsSubStr[pI] + "_h").c_str(), ";#gamma E_{T}^{Iso} [GeV];", nIso, minIso, maxIso);
+                h1D_photon_isoDist_sig[cI][eI][pI] = new TH1D(("h1D_photon_isoDist_sig_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_" + gammaPtBinsSubStr[pI] + "_h").c_str(), ";#gamma E_{T}^{Iso} [GeV];", nIso, minIso, maxIso);
+                centerTitles({h1D_photon_isoDist_tot[cI][eI][pI],h1D_photon_isoDist_sig[cI][eI][pI],h1D_photon_isoDist_bkg[cI][eI][pI]});
+                setSumW2({h1D_photon_isoDist_tot[cI][eI][pI],h1D_photon_isoDist_sig[cI][eI][pI],h1D_photon_isoDist_bkg[cI][eI][pI]});
             }
-            h1F_photon_purity_vs_pt[cI][eI] = new TH1F(("h1F_photon_purity_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];Purity", nGammaPtBinsSub, gammaPtBinsSub);
-            h1F_photon_yieldA_vs_pt[cI][eI] = new TH1F(("h1F_photon_yieldA_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBinsSub, gammaPtBinsSub);
-            h1F_photon_yieldB_vs_pt[cI][eI] = new TH1F(("h1F_photon_yieldB_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBinsSub, gammaPtBinsSub);
-            h1F_photon_yieldC_vs_pt[cI][eI] = new TH1F(("h1F_photon_yieldC_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBinsSub, gammaPtBinsSub);
-            h1F_photon_yieldD_vs_pt[cI][eI] = new TH1F(("h1F_photon_yieldD_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBinsSub, gammaPtBinsSub);
-            h1F_photon_yieldA_vs_pt_fineBinning[cI][eI] = new TH1F(("h1F_photon_yieldA_vs_pt_fineBinning_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBins, gammaPtBins);
-            h1F_photon_yieldB_vs_pt_fineBinning[cI][eI] = new TH1F(("h1F_photon_yieldB_vs_pt_fineBinning_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBins, gammaPtBins);
-            h1F_photon_yieldC_vs_pt_fineBinning[cI][eI] = new TH1F(("h1F_photon_yieldC_vs_pt_fineBinning_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBins, gammaPtBins);
-            h1F_photon_yieldD_vs_pt_fineBinning[cI][eI] = new TH1F(("h1F_photon_yieldD_vs_pt_fineBinning_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBins, gammaPtBins);
-            centerTitles({h1F_photon_purity_vs_pt[cI][eI],h1F_photon_yieldA_vs_pt[cI][eI],h1F_photon_yieldB_vs_pt[cI][eI],h1F_photon_yieldC_vs_pt[cI][eI],h1F_photon_yieldD_vs_pt[cI][eI]});
-            setSumW2({h1F_photon_purity_vs_pt[cI][eI],h1F_photon_yieldA_vs_pt[cI][eI],h1F_photon_yieldB_vs_pt[cI][eI],h1F_photon_yieldC_vs_pt[cI][eI],h1F_photon_yieldD_vs_pt[cI][eI]});
+            h1D_photon_purity_vs_pt[cI][eI] = new TH1D(("h1D_photon_purity_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];Purity", nGammaPtBinsSub, gammaPtBinsSub);
+            h1D_photon_yieldA_vs_pt[cI][eI] = new TH1D(("h1D_photon_yieldA_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBinsSub, gammaPtBinsSub);
+            h1D_photon_yieldB_vs_pt[cI][eI] = new TH1D(("h1D_photon_yieldB_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBinsSub, gammaPtBinsSub);
+            h1D_photon_yieldC_vs_pt[cI][eI] = new TH1D(("h1D_photon_yieldC_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBinsSub, gammaPtBinsSub);
+            h1D_photon_yieldD_vs_pt[cI][eI] = new TH1D(("h1D_photon_yieldD_vs_pt_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBinsSub, gammaPtBinsSub);
+            h1D_photon_yieldA_vs_pt_fineBinning[cI][eI] = new TH1D(("h1D_photon_yieldA_vs_pt_fineBinning_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBins, gammaPtBins);
+            h1D_photon_yieldB_vs_pt_fineBinning[cI][eI] = new TH1D(("h1D_photon_yieldB_vs_pt_fineBinning_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBins, gammaPtBins);
+            h1D_photon_yieldC_vs_pt_fineBinning[cI][eI] = new TH1D(("h1D_photon_yieldC_vs_pt_fineBinning_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBins, gammaPtBins);
+            h1D_photon_yieldD_vs_pt_fineBinning[cI][eI] = new TH1D(("h1D_photon_yieldD_vs_pt_fineBinning_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];dN/dE_{T}^{#gamma}", nGammaPtBins, gammaPtBins);
+            centerTitles({h1D_photon_purity_vs_pt[cI][eI],h1D_photon_yieldA_vs_pt[cI][eI],h1D_photon_yieldB_vs_pt[cI][eI],h1D_photon_yieldC_vs_pt[cI][eI],h1D_photon_yieldD_vs_pt[cI][eI]});
+            setSumW2({h1D_photon_purity_vs_pt[cI][eI],h1D_photon_yieldA_vs_pt[cI][eI],h1D_photon_yieldB_vs_pt[cI][eI],h1D_photon_yieldC_vs_pt[cI][eI],h1D_photon_yieldD_vs_pt[cI][eI]});
+            h1D_photon_ptMean[cI][eI] = new TH1D(("h1D_photon_ptMean_" + centBinsStr[cI] + "_" + etaBinsStr[eI] + "_h").c_str(), ";E_{T}^{#gamma} [GeV];<E_{T}^{#gamma}>", nGammaPtBinsSub, gammaPtBinsSub);
+            centerTitles({h1D_photon_ptMean[cI][eI]});
+            setSumW2({h1D_photon_ptMean[cI][eI]});
         }//eta loop
     }//centrailty loop
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
@@ -345,7 +349,7 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
     Float_t runMaxF = ((Float_t)runMax) + 0.5;
 
     outFile_p->cd();
-    runNumber_p = new TH1F(("runNumber_" + systStr + "_h").c_str(), ";Run;Counts", nRunBins+1, runMinF, runMaxF);
+    runNumber_p = new TH1D(("runNumber_" + systStr + "_h").c_str(), ";Run;Counts", nRunBins+1, runMinF, runMaxF);
     centerTitles(runNumber_p);
 
     //Grab the hltbranches for some basic prescale checks
@@ -524,56 +528,61 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
         ///////////////////////////////////////////////////////////
         // photon loop 
         for(unsigned int pI = 0; pI < photon_pt_p->size(); ++pI){
-            if(photon_pt_p->at(pI) < gammaPtBinsSub[0]) continue; // min gamma pT cut
-            if(photon_pt_p->at(pI) >= gammaPtBinsSub[nGammaPtBinsSub]) continue;
-            Int_t ptPos = ghostPos(nGammaPtBinsSub, gammaPtBinsSub, photon_pt_p->at(pI), true, doGlobalDebug);
+            double photonPt = photon_pt_p->at(pI);
+            double phoEtaHere = photon_eta_p->at(pI);
+            if(photonPt < gammaPtBinsSub[0]) continue; // min gamma pT cut
+            if(photonPt >= gammaPtBinsSub[nGammaPtBinsSub]) continue;
+            Int_t ptPos = ghostPos(nGammaPtBinsSub, gammaPtBinsSub, photonPt, true, doGlobalDebug);
 
             int tempEtaPos = -1;
             for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
-                if(abs(photon_eta_p->at(pI))>=etaBins_i[eI] && abs(photon_eta_p->at(pI))<etaBins_f[eI]) tempEtaPos=eI; 
+                if(abs(phoEtaHere)>=etaBins_i[eI] && abs(phoEtaHere)<etaBins_f[eI]) tempEtaPos=eI; 
             }
             if(tempEtaPos==-1) continue; //eta cut
 
             if(isMC){             
                 if(truthPhotonPt<=0) continue; //prompt isolated photons?!
                 if(truthPhotonIso>genIsoCut) continue;
-                if(getDR(photon_eta_p->at(pI), photon_phi_p->at(pI), truthPhotonEta, truthPhotonPhi) > phoGenMatchingDR) continue;
+                if(getDR(phoEtaHere, photon_phi_p->at(pI), truthPhotonEta, truthPhotonPhi) > phoGenMatchingDR) continue;
             }
 
             float correctedIso = photon_etcone_p->at(pI);
             if(doPtCorrectedIso && doCentCorrectedIso)
-                correctedIso = getCorrectedPhotonIsolation(isPP, photon_etcone_p->at(pI), photon_pt_p->at(pI), photon_eta_p->at(pI), cent);
+                correctedIso = getCorrectedPhotonIsolation(isPP, photon_etcone_p->at(pI), photonPt, phoEtaHere, cent);
             else if(doPtCorrectedIso && !doCentCorrectedIso)
-                correctedIso = getPtCorrectedPhotonIsolation(photon_etcone_p->at(pI), photon_pt_p->at(pI), photon_eta_p->at(pI));
+                correctedIso = getPtCorrectedPhotonIsolation(photon_etcone_p->at(pI), photonPt, phoEtaHere);
 
             if(isMC){ 
-                if(abs(photon_eta_p->at(pI)) < 1.37) correctedIso += isoEshift;
-                else if(abs(photon_eta_p->at(pI)) > 1.52 && abs(photon_eta_p->at(pI)) < 2.37) correctedIso += isoEshift_endcap;
+                if(abs(phoEtaHere) < 1.37) correctedIso += isoEshift;
+                else if(abs(phoEtaHere) > 1.52 && abs(phoEtaHere) < 2.37) correctedIso += isoEshift_endcap;
             }
            
             if(photon_tight_p->at(pI)==1){ 
-                fillTH1(h1F_photon_isoDist_tot[centPos][tempEtaPos][ptPos],correctedIso,fullWeight);
+                fillTH1(h1D_photon_isoDist_tot[centPos][tempEtaPos][ptPos],correctedIso,fullWeight);
                 if(correctedIso < isoCut){ 
                     NA[centPos][tempEtaPos][ptPos]++;
-                    fillTH1(h1F_photon_yieldA_vs_pt[centPos][tempEtaPos],photon_pt_p->at(pI),fullWeight);
-                    fillTH1(h1F_photon_yieldA_vs_pt_fineBinning[centPos][tempEtaPos],photon_pt_p->at(pI),fullWeight);
-                    fillTH1(h1F_photon_isoDist_sig[centPos][tempEtaPos][ptPos],correctedIso,fullWeight);
+                    fillTH1(h1D_photon_yieldA_vs_pt[centPos][tempEtaPos],photonPt,fullWeight);
+                    fillTH1(h1D_photon_yieldA_vs_pt_fineBinning[centPos][tempEtaPos],photonPt,fullWeight);
+                    fillTH1(h1D_photon_isoDist_sig[centPos][tempEtaPos][ptPos],correctedIso,fullWeight);
+                    //add up all photon pT in each pT bin and then divide it by the number of photons which is "h1D_photon_yieldA_vs_pt" 
+                    if(isMC) fillTH1(h1D_photon_ptMean[centPos][tempEtaPos],photonPt,fullWeight*photonPt);
+                    else fillTH1(h1D_photon_ptMean[centPos][tempEtaPos],photonPt,photonPt);
                 } else if(correctedIso > isoCut+bkgIsoGap){
                     NB[centPos][tempEtaPos][ptPos]++;
-                    fillTH1(h1F_photon_yieldB_vs_pt[centPos][tempEtaPos],photon_pt_p->at(pI),fullWeight);
-                    fillTH1(h1F_photon_yieldB_vs_pt_fineBinning[centPos][tempEtaPos],photon_pt_p->at(pI),fullWeight);
+                    fillTH1(h1D_photon_yieldB_vs_pt[centPos][tempEtaPos],photonPt,fullWeight);
+                    fillTH1(h1D_photon_yieldB_vs_pt_fineBinning[centPos][tempEtaPos],photonPt,fullWeight);
                 }
             }
             if(photon_tight_p->at(pI)==0 && (( photon_isem_p->at(pI) & NONTIGHT_ISEM ) == 0)){ 
-                fillTH1(h1F_photon_isoDist_bkg[centPos][tempEtaPos][ptPos],correctedIso,fullWeight);
+                fillTH1(h1D_photon_isoDist_bkg[centPos][tempEtaPos][ptPos],correctedIso,fullWeight);
                 if(correctedIso < isoCut){ 
                     NC[centPos][tempEtaPos][ptPos]++;
-                    fillTH1(h1F_photon_yieldC_vs_pt[centPos][tempEtaPos],photon_pt_p->at(pI),fullWeight);
-                    fillTH1(h1F_photon_yieldC_vs_pt_fineBinning[centPos][tempEtaPos],photon_pt_p->at(pI),fullWeight);
+                    fillTH1(h1D_photon_yieldC_vs_pt[centPos][tempEtaPos],photonPt,fullWeight);
+                    fillTH1(h1D_photon_yieldC_vs_pt_fineBinning[centPos][tempEtaPos],photonPt,fullWeight);
                 } else if(correctedIso > isoCut+bkgIsoGap){ 
                     ND[centPos][tempEtaPos][ptPos]++;
-                    fillTH1(h1F_photon_yieldD_vs_pt[centPos][tempEtaPos],photon_pt_p->at(pI),fullWeight);
-                    fillTH1(h1F_photon_yieldD_vs_pt_fineBinning[centPos][tempEtaPos],photon_pt_p->at(pI),fullWeight);
+                    fillTH1(h1D_photon_yieldD_vs_pt[centPos][tempEtaPos],photonPt,fullWeight);
+                    fillTH1(h1D_photon_yieldD_vs_pt_fineBinning[centPos][tempEtaPos],photonPt,fullWeight);
                 }
             }
 
@@ -581,6 +590,14 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
     }//event loop
 
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
+
+    for(Int_t cI = 0; cI < nCentBins; ++cI){
+        for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
+            h1D_photon_ptMean[cI][eI]->Divide(h1D_photon_ptMean[cI][eI], h1D_photon_yieldA_vs_pt[cI][eI]);
+        }
+    }
+
+
 
     ///////////////////////////////////////////////////////////
     // Write histograms in the output file 
@@ -599,19 +616,20 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
         for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
             if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
             for(Int_t pI = 0; pI < nGammaPtBinsSub; ++pI){
-                h1F_photon_isoDist_bkg[cI][eI][pI]->Write("", TObject::kOverwrite);
-                h1F_photon_isoDist_sig[cI][eI][pI]->Write("", TObject::kOverwrite);
-                h1F_photon_isoDist_tot[cI][eI][pI]->Write("", TObject::kOverwrite);
+                h1D_photon_isoDist_bkg[cI][eI][pI]->Write("", TObject::kOverwrite);
+                h1D_photon_isoDist_sig[cI][eI][pI]->Write("", TObject::kOverwrite);
+                h1D_photon_isoDist_tot[cI][eI][pI]->Write("", TObject::kOverwrite);
             }
-            h1F_photon_purity_vs_pt[cI][eI]->Write("", TObject::kOverwrite);
-            h1F_photon_yieldA_vs_pt[cI][eI]->Write("", TObject::kOverwrite);
-            h1F_photon_yieldB_vs_pt[cI][eI]->Write("", TObject::kOverwrite);
-            h1F_photon_yieldC_vs_pt[cI][eI]->Write("", TObject::kOverwrite);
-            h1F_photon_yieldD_vs_pt[cI][eI]->Write("", TObject::kOverwrite);
-            h1F_photon_yieldA_vs_pt_fineBinning[cI][eI]->Write("", TObject::kOverwrite);
-            h1F_photon_yieldB_vs_pt_fineBinning[cI][eI]->Write("", TObject::kOverwrite);
-            h1F_photon_yieldC_vs_pt_fineBinning[cI][eI]->Write("", TObject::kOverwrite);
-            h1F_photon_yieldD_vs_pt_fineBinning[cI][eI]->Write("", TObject::kOverwrite);
+            h1D_photon_ptMean[cI][eI]->Write("", TObject::kOverwrite);
+            h1D_photon_purity_vs_pt[cI][eI]->Write("", TObject::kOverwrite);
+            h1D_photon_yieldA_vs_pt[cI][eI]->Write("", TObject::kOverwrite);
+            h1D_photon_yieldB_vs_pt[cI][eI]->Write("", TObject::kOverwrite);
+            h1D_photon_yieldC_vs_pt[cI][eI]->Write("", TObject::kOverwrite);
+            h1D_photon_yieldD_vs_pt[cI][eI]->Write("", TObject::kOverwrite);
+            h1D_photon_yieldA_vs_pt_fineBinning[cI][eI]->Write("", TObject::kOverwrite);
+            h1D_photon_yieldB_vs_pt_fineBinning[cI][eI]->Write("", TObject::kOverwrite);
+            h1D_photon_yieldC_vs_pt_fineBinning[cI][eI]->Write("", TObject::kOverwrite);
+            h1D_photon_yieldD_vs_pt_fineBinning[cI][eI]->Write("", TObject::kOverwrite);
         }
     }
     if(doGlobalDebug) std::cout << "GLOBAL DEBUG FILE, LINE: " << __FILE__ << ", " << __LINE__ << std::endl;
@@ -628,19 +646,20 @@ int phoTaggedJetRaa_photonPurity(std::string inConfigFileName)
     }
     for(Int_t cI = 0; cI < nCentBins; ++cI){
         for(Int_t eI = 0; eI < nPhoEtaBins; ++eI){
-            delete h1F_photon_purity_vs_pt[cI][eI];
-            delete h1F_photon_yieldA_vs_pt[cI][eI];
-            delete h1F_photon_yieldB_vs_pt[cI][eI];
-            delete h1F_photon_yieldC_vs_pt[cI][eI];
-            delete h1F_photon_yieldD_vs_pt[cI][eI];
-            delete h1F_photon_yieldA_vs_pt_fineBinning[cI][eI];
-            delete h1F_photon_yieldB_vs_pt_fineBinning[cI][eI];
-            delete h1F_photon_yieldC_vs_pt_fineBinning[cI][eI];
-            delete h1F_photon_yieldD_vs_pt_fineBinning[cI][eI];
+            delete h1D_photon_ptMean[cI][eI];
+            delete h1D_photon_purity_vs_pt[cI][eI];
+            delete h1D_photon_yieldA_vs_pt[cI][eI];
+            delete h1D_photon_yieldB_vs_pt[cI][eI];
+            delete h1D_photon_yieldC_vs_pt[cI][eI];
+            delete h1D_photon_yieldD_vs_pt[cI][eI];
+            delete h1D_photon_yieldA_vs_pt_fineBinning[cI][eI];
+            delete h1D_photon_yieldB_vs_pt_fineBinning[cI][eI];
+            delete h1D_photon_yieldC_vs_pt_fineBinning[cI][eI];
+            delete h1D_photon_yieldD_vs_pt_fineBinning[cI][eI];
             for(Int_t pI = 0; pI < nGammaPtBinsSub; ++pI){
-                delete h1F_photon_isoDist_tot[cI][eI][pI];
-                delete h1F_photon_isoDist_sig[cI][eI][pI];
-                delete h1F_photon_isoDist_bkg[cI][eI][pI];
+                delete h1D_photon_isoDist_tot[cI][eI][pI];
+                delete h1D_photon_isoDist_sig[cI][eI][pI];
+                delete h1D_photon_isoDist_bkg[cI][eI][pI];
             }
         }
     }

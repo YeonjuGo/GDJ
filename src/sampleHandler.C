@@ -23,10 +23,16 @@ sampleHandler::~sampleHandler()
 void sampleHandler::PreInit()
 {
   validMinPthatsByYear[2015] = {};
+  //validMinPthatsByYear[2017] = {50, 70, 140, 280};
   validMinPthatsByYear[2017] = {35, 50, 70, 140, 280};
-  validMinPthatsByYear[2018] = {50, 70, 140};
+  validMinPthatsByYear[2018] = {35, 50, 70, 140};
 
   //PYTHIA8 + Overlay
+  dataSetNameToIsPP["mc16_5TeV.423101.Pythia8EvtGen_A14NNPDF23LO_gammajet_DP35_50.merge.AOD.e5094_d1516_r11439_r11217"] = 0;
+  dataSetNameToIsMC["mc16_5TeV.423101.Pythia8EvtGen_A14NNPDF23LO_gammajet_DP35_50.merge.AOD.e5094_d1516_r11439_r11217"] = 1;
+  dataSetNameToYear["mc16_5TeV.423101.Pythia8EvtGen_A14NNPDF23LO_gammajet_DP35_50.merge.AOD.e5094_d1516_r11439_r11217"] = 2018;
+  dataSetNameToMinPthat["mc16_5TeV.423101.Pythia8EvtGen_A14NNPDF23LO_gammajet_DP35_50.merge.AOD.e5094_d1516_r11439_r11217"] = 35;
+
   dataSetNameToIsPP["mc16_5TeV.423102.Pythia8EvtGen_A14NNPDF23LO_gammajet_DP50_70.merge.AOD.e5094_d1516_r11439_r11217"] = 0;
   dataSetNameToIsMC["mc16_5TeV.423102.Pythia8EvtGen_A14NNPDF23LO_gammajet_DP50_70.merge.AOD.e5094_d1516_r11439_r11217"] = 1;
   dataSetNameToYear["mc16_5TeV.423102.Pythia8EvtGen_A14NNPDF23LO_gammajet_DP50_70.merge.AOD.e5094_d1516_r11439_r11217"] = 2018;
@@ -68,31 +74,31 @@ void sampleHandler::PreInit()
   dataSetNameToYear["mc16_5TeV.423105.Pythia8EvtGen_A14NNPDF23LO_gammajet_DP280_500.merge.AOD.e5094_s3238_r10441_r10210"] = 2017;
   dataSetNameToMinPthat["mc16_5TeV.423105.Pythia8EvtGen_A14NNPDF23LO_gammajet_DP280_500.merge.AOD.e5094_s3238_r10441_r10210"] = 280;
 
-  //SHERPA
-  dataSetNameToIsPP["mc16_5TeV.420155.Sherpa_224_NNPDF30NNLO_SinglePhotonPt35_50_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
-  dataSetNameToIsMC["mc16_5TeV.420155.Sherpa_224_NNPDF30NNLO_SinglePhotonPt35_50_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
-  dataSetNameToYear["mc16_5TeV.420155.Sherpa_224_NNPDF30NNLO_SinglePhotonPt35_50_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 2017;
-  dataSetNameToMinPthat["mc16_5TeV.420155.Sherpa_224_NNPDF30NNLO_SinglePhotonPt35_50_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 35;
+  ////SHERPA
+  //dataSetNameToIsPP["mc16_5TeV.420155.Sherpa_224_NNPDF30NNLO_SinglePhotonPt35_50_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
+  //dataSetNameToIsMC["mc16_5TeV.420155.Sherpa_224_NNPDF30NNLO_SinglePhotonPt35_50_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
+  //dataSetNameToYear["mc16_5TeV.420155.Sherpa_224_NNPDF30NNLO_SinglePhotonPt35_50_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 2017;
+  //dataSetNameToMinPthat["mc16_5TeV.420155.Sherpa_224_NNPDF30NNLO_SinglePhotonPt35_50_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 35;
  
-  dataSetNameToIsPP["mc16_5TeV.420156.Sherpa_224_NNPDF30NNLO_SinglePhotonPt50_70_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
-  dataSetNameToIsMC["mc16_5TeV.420156.Sherpa_224_NNPDF30NNLO_SinglePhotonPt50_70_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
-  dataSetNameToYear["mc16_5TeV.420156.Sherpa_224_NNPDF30NNLO_SinglePhotonPt50_70_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 2017;
-  dataSetNameToMinPthat["mc16_5TeV.420156.Sherpa_224_NNPDF30NNLO_SinglePhotonPt50_70_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 50;
+  //dataSetNameToIsPP["mc16_5TeV.420156.Sherpa_224_NNPDF30NNLO_SinglePhotonPt50_70_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
+  //dataSetNameToIsMC["mc16_5TeV.420156.Sherpa_224_NNPDF30NNLO_SinglePhotonPt50_70_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
+  //dataSetNameToYear["mc16_5TeV.420156.Sherpa_224_NNPDF30NNLO_SinglePhotonPt50_70_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 2017;
+  //dataSetNameToMinPthat["mc16_5TeV.420156.Sherpa_224_NNPDF30NNLO_SinglePhotonPt50_70_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 50;
 
-  dataSetNameToIsPP["mc16_5TeV.420157.Sherpa_224_NNPDF30NNLO_SinglePhotonPt70_140_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
-  dataSetNameToIsMC["mc16_5TeV.420157.Sherpa_224_NNPDF30NNLO_SinglePhotonPt70_140_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
-  dataSetNameToYear["mc16_5TeV.420157.Sherpa_224_NNPDF30NNLO_SinglePhotonPt70_140_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 2017;
-  dataSetNameToMinPthat["mc16_5TeV.420157.Sherpa_224_NNPDF30NNLO_SinglePhotonPt70_140_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 70;
+  //dataSetNameToIsPP["mc16_5TeV.420157.Sherpa_224_NNPDF30NNLO_SinglePhotonPt70_140_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
+  //dataSetNameToIsMC["mc16_5TeV.420157.Sherpa_224_NNPDF30NNLO_SinglePhotonPt70_140_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
+  //dataSetNameToYear["mc16_5TeV.420157.Sherpa_224_NNPDF30NNLO_SinglePhotonPt70_140_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 2017;
+  //dataSetNameToMinPthat["mc16_5TeV.420157.Sherpa_224_NNPDF30NNLO_SinglePhotonPt70_140_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 70;
 
-  dataSetNameToIsPP["mc16_5TeV.420158.Sherpa_224_NNPDF30NNLO_SinglePhotonPt140_280_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
-  dataSetNameToIsMC["mc16_5TeV.420158.Sherpa_224_NNPDF30NNLO_SinglePhotonPt140_280_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
-  dataSetNameToYear["mc16_5TeV.420158.Sherpa_224_NNPDF30NNLO_SinglePhotonPt140_280_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 2017;
-  dataSetNameToMinPthat["mc16_5TeV.420158.Sherpa_224_NNPDF30NNLO_SinglePhotonPt140_280_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 140;
+  //dataSetNameToIsPP["mc16_5TeV.420158.Sherpa_224_NNPDF30NNLO_SinglePhotonPt140_280_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
+  //dataSetNameToIsMC["mc16_5TeV.420158.Sherpa_224_NNPDF30NNLO_SinglePhotonPt140_280_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
+  //dataSetNameToYear["mc16_5TeV.420158.Sherpa_224_NNPDF30NNLO_SinglePhotonPt140_280_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 2017;
+  //dataSetNameToMinPthat["mc16_5TeV.420158.Sherpa_224_NNPDF30NNLO_SinglePhotonPt140_280_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 140;
 
-  dataSetNameToIsPP["mc16_5TeV.420159.Sherpa_224_NNPDF30NNLO_SinglePhotonPt280_500_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
-  dataSetNameToIsMC["mc16_5TeV.420159.Sherpa_224_NNPDF30NNLO_SinglePhotonPt280_500_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
-  dataSetNameToYear["mc16_5TeV.420159.Sherpa_224_NNPDF30NNLO_SinglePhotonPt280_500_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 2017;
-  dataSetNameToMinPthat["mc16_5TeV.420159.Sherpa_224_NNPDF30NNLO_SinglePhotonPt280_500_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 280;
+  //dataSetNameToIsPP["mc16_5TeV.420159.Sherpa_224_NNPDF30NNLO_SinglePhotonPt280_500_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
+  //dataSetNameToIsMC["mc16_5TeV.420159.Sherpa_224_NNPDF30NNLO_SinglePhotonPt280_500_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 1;
+  //dataSetNameToYear["mc16_5TeV.420159.Sherpa_224_NNPDF30NNLO_SinglePhotonPt280_500_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 2017;
+  //dataSetNameToMinPthat["mc16_5TeV.420159.Sherpa_224_NNPDF30NNLO_SinglePhotonPt280_500_EtaFilter.merge.AOD.e6940_s3238_r10441_r10210"] = 280;
 
   for(int ppI = 0; ppI < 2; ++ppI){
     for(int mcI = 0; mcI < 2; ++mcI){
@@ -109,7 +115,8 @@ void sampleHandler::PreInit()
 
 	  tagToMinPthat[tag] = min;
 	  
-	  if(tag == 35201711){
+    //std::cout << "min pt hat " << min << std::endl;
+	  if(tag == 35201711){ //pythia for pp
 	    tagToXSec[tag] = 351620;//in nanobarn
 	    tagToFilterEff[tag] = 0.000029108;	    
 	  }
@@ -128,6 +135,10 @@ void sampleHandler::PreInit()
 	  else if(tag == 280201711){
 	    tagToXSec[tag] = 37.592;//in nanobarn
 	    tagToFilterEff[tag] = 0.000043848;
+	  }
+	  else if(tag == 35201810){ // pythia+overlay for pbpb
+	    tagToXSec[tag] = 351620;//in nanobar
+	    tagToFilterEff[tag] = 0.000029113;
 	  }
 	  else if(tag == 50201810){
 	    tagToXSec[tag] = 85898;//in nanobar
